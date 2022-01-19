@@ -43,7 +43,6 @@ Font.setPixelSizes(monoFont, 24)
 
 -- audio related vars
 Sound.init()
--- i think it's polish: "kanał lewy, kanał prawy" (left channel, right channel)
 audiopath = "app0:resources/snd/stereo-audio-test.ogg"
 audiofile = 0  -- /!\ will change -- ztodo: i don't think i need this here
 audioplaying = false  -- /!\ will change - declared here so it's global

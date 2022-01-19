@@ -1,37 +1,19 @@
 # VPad Tester & Configurator
 
-A simple homebrew for testing the input data on the PS Vita™ made on [Lua Player Plus Vita](https://github.com/Rinnegatamante/lpp-vita)
-
-Extended version of a utility created by Smoke5, converted to Lua by Keinta15
+PSVita hardware tester, with support for configuring Rinnegatamante's AnalogsEnhancer plugin.
 
 ![preview](./img/preview.png)
 
 ### Features:
 
-(most of it's not my work, i just added features {in italic} that i was missing)
-
 * highlight currently pressed buttons
 * visual feedback & absolute numbers of analogue stick input
 * visual feedback of touchscreen/touchpad, including multitouch
-* _max range of analogue stick input (useful for adjusting deadzones)_
+* max range of analogue stick input (useful for adjusting deadzones)
+* reading (and eventually writing) the config file for AnalogsEnhancer
 * stereo audio tester
-* _is now a “safe” homebrew, as i saw no reason otherwise_
-* _a better colourscheme ([gruvbox dark](https://github.com/gruvbox-community/gruvbox))_
-* _better icon and livearea assets_
 
-### Dev Miscellany:
-
-#### Building:
-
-lua player plus' builder is included in .\lpp - read the readme in there, or just run zbuild.bat
-
-* i've modified build.bat to zbuild.bat because i'm lazy
-	* use the original if you want to change the name/id
-	* you'll have to mess with directories
-* [vpk editor](https://qberty.com/ps-vita-vpk-editor/) is quite useful for automatically reducing bit depth
-* this is how i visualise stick range
-
-![max range logic](./img/max-logic-pic.png)
+this app is an extended version of a utility created by Smoke5, converted to Lua by Keinta15
 
 ---
 
