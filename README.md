@@ -2,6 +2,8 @@
 
 PSVita hardware tester, with support for configuring Rinnegatamante's AnalogsEnhancer plugin.
 
+made with [Lua Player Plus Vita](https://github.com/Rinnegatamante/lpp-vita).
+
 ![preview](./img/preview.png)
 
 ### Features:
@@ -14,6 +16,8 @@ PSVita hardware tester, with support for configuring Rinnegatamante's AnalogsEnh
 * stereo audio tester
 
 this app is an extended version of a utility created by Smoke5, converted to Lua by Keinta15
+
+but almost none of that code still exists, so i thought it should be in it's own repo
 
 ---
 
