@@ -1,2 +1,4 @@
 # built files
-/lpp/*.vpk
+*.vpk
+/img/social-preview.png
+/img/*.xcf
