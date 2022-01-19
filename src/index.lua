@@ -187,7 +187,7 @@ function drawHomePage()
 	-- Display info
 	Font.print(varwFont, 205, 078, "press Start + Select to exit", grey)
 	Font.print(varwFont, 205, 103, "press L + R to reset max stick range", grey)
-	Font.print(varwFont, 205, 128, "press X + O for audio test", grey)
+	Font.print(varwFont, 205, 128, "press Χ + Ο for audio test", grey)
 	Font.print(varwFont, 205, 153, "press Δ + Π for deadzone config", grey)
 	-- debug print
 	-- Font.print(varwFont, 205, 178, "placeholder", grey)

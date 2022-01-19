@@ -23,14 +23,15 @@ but almost none of that code still exists, so i thought it should be in it's own
 
 ## Credits to:
 
+#### inspiration for this project
+
 - Original VitaTester [SMOKE5](https://github.com/SMOKE5) for [VitaTester](https://github.com/SMOKE5/VitaTester)
 - Conversion to Lua [Keinta15](https://github.com/Keinta15/) for [Lua Vita Tester](https://github.com/Keinta15/Lua-Vita-Tester)
 
-## Extra Credits
+#### stuff used
 
 - [Rinnegatamante](https://github.com/Rinnegatamante) for [lpp-vita](https://github.com/Rinnegatamante/lpp-vita)
 - [xerpi](https://github.com/xerpi) for [vita2dlib](https://github.com/xerpi/vita2dlib)
 - [tokyoship](https://commons.wikimedia.org/wiki/User:Tokyoship) for the [vita wireframe](https://commons.wikimedia.org/wiki/File:PlayStation_Vita_Layout.svg) [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0)
 - [remix icons](https://remixicon.com/) for the fingerprint icon, and the cog + spanner on the logo
 - [pngquant](https://pngquant.org/) for smaller images
-- [Ruben_Wolfe451](https://twitter.com/Ruben_Wolfe451)
