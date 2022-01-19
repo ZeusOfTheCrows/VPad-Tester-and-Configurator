@@ -4,7 +4,7 @@ PSVita hardware tester, with support for configuring Rinnegatamante's AnalogsEnh
 
 made with [Lua Player Plus Vita](https://github.com/Rinnegatamante/lpp-vita).
 
-![preview](./img/preview.png)
+![preview](./img/preview.jpg)
 
 ### Features:
 
