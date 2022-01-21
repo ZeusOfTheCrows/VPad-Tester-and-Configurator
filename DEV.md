@@ -1,10 +1,12 @@
 # VPad Tester & Configurator
 
+## Building:
+
+* download [lua player plus](https://github.com/Rinnegatamante/lpp-vita/releases/)' latest (non-nightly) release
+* extract to .\lpp (don't overwrite eboot.bin files unless you want hassle)
+* run zBuild.bat
+
 ## Dev Miscellany:
-
-### Building:
-
-lua player plus' builder is included in .\lpp - read the readme in there, or just run zbuild.bat
 
 * i've modified build.bat to zbuild.bat because i'm lazy
 	* use the original if you want to change the name/id

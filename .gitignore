@@ -2,3 +2,9 @@
 *.vpk
 /img/social-preview.png
 /img/*.xcf
+# lpp build files
+/lpp/build.bat
+/lpp/Readme.txt
+/lpp/vita-mksfoex.exe
+/lpp/7z.dll
+/lpp/7z.exe

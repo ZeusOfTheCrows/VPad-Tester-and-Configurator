@@ -15,9 +15,9 @@ made with [Lua Player Plus Vita](https://github.com/Rinnegatamante/lpp-vita).
 * reading (and eventually writing) the config file for AnalogsEnhancer
 * stereo audio tester
 
-this app is an extended version of a utility created by Smoke5, converted to Lua by Keinta15
+comes in both safe and unsafe versions. the unsafe version is required to modify Yoti's ur0: mod of AnalogsEnhancer; and possibly other features in future
 
-but almost none of that code still exists, so i thought it should be in it's own repo
+this app is an extended version of a utility created by Smoke5, and converted to Lua by Keinta15, but almost none of that code still exists, so i thought it should be in it's own repo
 
 ---
 
