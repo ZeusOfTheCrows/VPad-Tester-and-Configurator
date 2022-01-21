@@ -56,6 +56,7 @@ anasizemulti = 7.5
 -- global file handle for analogsenhancer config file
 -- anaencfgprops = {}  -- /!\ will change
 anaendbg = ""
+genericdebugtext = ""  -- multipurpose debug text ztodo remove this
 -- analogsenhancer config paths
 anaencfgpaths = {"ur0:tai/AnaEnaCfg.txt", "ux0:data/AnalogsEnhancer/config.txt"}
 dzstatustext = {
@@ -72,17 +73,17 @@ circle   = SCE_CTRL_CIRCLE
 triangle = SCE_CTRL_TRIANGLE
 start    = SCE_CTRL_START
 select   = SCE_CTRL_SELECT
-home     = SCE_CTRL_PSBUTTON  -- not used: see draw function line ~270
+home     = SCE_CTRL_PSBUTTON  -- hmmm... see draw function line ~270
 rtrigger = SCE_CTRL_RTRIGGER
 ltrigger = SCE_CTRL_LTRIGGER
 dpup     = SCE_CTRL_UP
 dpdown   = SCE_CTRL_DOWN
 dpleft   = SCE_CTRL_LEFT
 dpright  = SCE_CTRL_RIGHT
--- get system accept button–if 2^13 (13þ bit) assign circle keycode, else cross
-btnposi=(Controls.getEnterButton()==8192) and SCE_CTRL_CIRCLE or SCE_CTRL_CROSS
--- assign back button based on previous result (i hate lua's ternary operators)
-btnnega=(btnposi==SCE_CTRL_CIRCLE) and SCE_CTRL_CROSS or SCE_CTRL_CIRCLE
+-- get system accept button–if 2^13 (13þ bit) assign circle, else cross
+btnaccept = (Controls.getEnterButton() == 8192) and circle or cross
+-- assign back button based on previous result
+btncancel = (btnaccept == circle) and cross or circle
 
 -- init vars to avoid nil
 lx, ly, rx, ry = 0.0, 0.0, 0.0, 0.0  -- /!\ will change
@@ -206,7 +207,9 @@ function drawDzcfPage(statustext, statuscolour)  -- draw deadzone config page
 	statuscolour = grey or statuscolour
 	-- Display info
 	Font.print(varwFont, 205, 078, arrayToStr(statustext, "; "), statuscolour)
-	Font.print(varwFont, 205, 103, "axpt = " .. btnposi .. ", back = " .. btnnega, grey)
+	-- Font.print(varwFont, 205, 103,
+	-- "axpt = " .. btnaccept .. ", back = " .. btncancel, grey
+	-- )
 	-- Font.print(varwFont, 205, 128, "Press X + O for Sound Test", grey)
 	-- Font.print(varwFont, 205, 153, "placeholder", grey)
 	-- debug print
@@ -255,8 +258,8 @@ function drawBtnInput()  -- all digital buttons
 		Graphics.drawImage(858, 378, sttselctimg)
 	end
 	if Controls.check(pad, home) then
-		-- this only gets called while the quick settings are shown and the
-		-- home button is enabled - why? (i may as well leave it in though)
+		-- this only gets called whilst the home button is enabled. this means i
+		-- i can't use Controls.lockHomeButton():
 		Graphics.drawImage(087, 376, homeimg)
 	end
 
@@ -269,7 +272,7 @@ function drawBtnInput()  -- all digital buttons
 
 	-- i don't use drawRotateImage due a bug (probably in vita2d) that draws the
 	-- images incorrectly (fuzzy broken borders, misplaced pixels). if you're
-	-- editing this in the future, check if it's been fixed
+	-- editing this in the future, check if it's been fixed to reduce vpk size
 	if Controls.check(pad, dpup) then
 		-- Graphics.drawRotateImage(97, 158, dpupimg, 0)
 		Graphics.drawImage(77, 134, dpupimg)
@@ -426,20 +429,17 @@ function homePageLogic(pad, ppf) -- ppf = pad prev frame
 end
 
 function dzcfPageLogic(pad, ppf)  -- deadzone config page
-	if (Controls.check(pad, btnnega) and not Controls.check(ppf, btnnega)) then
+	if (Controls.check(pad, btncancel) and not Controls.check(ppf, btncancel)) then
 		currPage = 0  -- for now just exit back to homescreen
 	end
 end
 
 
--- function main(pad)  --  i don't know if this is a paradigm in lua
-	-- ztodo pull this all out from the main loop
-	-- return pad
--- end
+function main(padprevframe)
+	-- i don't know if the "main" function is a paradigm in lua, but
+	-- it seems neater to me
 
----------------------------------- main loop ----------------------------------
-while true do
-
+	-- initialise pad state this frame
 	pad = Controls.read()
 
 	-- init battery stats
@@ -462,9 +462,11 @@ while true do
 	rxmax = calcMax(rx, rxmax)
 	rymax = calcMax(ry, rymax)
 
-	-- init/update touch registration
-	tx1, ty1, tx2, ty2, tx3, ty3, tx4, ty4, tx5, ty5, tx6, ty6 =
-	                                                        Controls.readTouch()
+	-- init/update touch registration (not globals as not drawn if nil)
+	tx1, ty1, tx2, ty2, tx3, ty3,
+	tx4, ty4, tx5, ty5, tx6, ty6
+	= Controls.readTouch()
+
 	rtx1, rty1, rtx2, rty2, rtx4, rty4 = Controls.readRetroTouch()
 
 	dzstatus = ""  -- localscope for now
@@ -477,7 +479,12 @@ while true do
 
 	drawInfo(pad, currPage, dzstatus)
 
-	padprevframe = pad
-	-- pad = main(pad)
+	return pad  -- see main loop
+end
 
+---------------------------------- main loop ----------------------------------
+while true do
+	-- take pad status from previous frame and immediately pass it back
+	-- into the function (which returns the pad at the end)
+	padprevframe = main(padprevframe)
 end
