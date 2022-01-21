@@ -56,10 +56,13 @@ anasizemulti = 7.5
 -- global file handle for analogsenhancer config file
 -- anaencfgprops = {}  -- /!\ will change
 anaendbg = ""
--- analogsenhancer config paths. oh look, it's a 2d array because fuck you
-anaencfgpaths ={
-{"ur0:tai/AnaEnCfg.txt", "config loaded for ur0: mod"},
-{"ux0:data/AnalogsEnhancer/config.txt", "config loaded for default plugin"}
+-- analogsenhancer config paths
+anaencfgpaths = {"ur0:tai/AnaEnaCfg.txt", "ux0:data/AnalogsEnhancer/config.txt"}
+dzstatustext = {
+	"config loaded from ",
+	"cannot find file. is plugin installed?",
+	"config loaded. it is recommended to set deadzones to 0 before configuring",
+	"config successfully set. reboot to apply changes"
 }
 
 -- short button names
@@ -76,6 +79,10 @@ dpup     = SCE_CTRL_UP
 dpdown   = SCE_CTRL_DOWN
 dpleft   = SCE_CTRL_LEFT
 dpright  = SCE_CTRL_RIGHT
+-- get system accept button–if 2^13 (13þ bit) assign circle keycode, else cross
+btnposi=(Controls.getEnterButton()==8192) and SCE_CTRL_CIRCLE or SCE_CTRL_CROSS
+-- assign back button based on previous result (i hate lua's ternary operators)
+btnnega=(btnposi==SCE_CTRL_CIRCLE) and SCE_CTRL_CROSS or SCE_CTRL_CIRCLE
 
 -- init vars to avoid nil
 lx, ly, rx, ry = 0.0, 0.0, 0.0, 0.0  -- /!\ will change
@@ -128,13 +135,13 @@ function calcMax(currNum, currMax)  -- calculating "max" of stick range from 0
 end
 
 function openFile(filepaths)  -- find existing file and return, or return false
-	for i, value in ipairs(filepaths) do
-		file = value[1]
-		if System.doesFileExist(file) then
-			return System.openFile(file, FREAD), value[2]
+	for i, p in ipairs(filepaths) do
+		if System.doesFileExist(p) then
+			--                                first 4 letters of path (for id'ing)
+			return System.openFile(p, FREAD), string.sub(p,1,4)
 		end
 	end
-	return false, "cannot find file: is plugin installed?"
+	return false, ""
 end
 
 function parseCfgFile(filepaths)  -- read config file and return info (check)
@@ -149,7 +156,7 @@ function parseCfgFile(filepaths)  -- read config file and return info (check)
 		-- System.closeFile(file)
 		return anaenprops, output
 	else
-		return false, output
+		return "false", output
 	end
 end
 
@@ -172,6 +179,8 @@ function toggleAudio()  -- no arguments because it has to be a global, i think
 	end
 end
 
+------------------------------ drawing functions ------------------------------
+
 function drawDecs()  -- draw decorations (title, frame etc.)
 	-- colour background & draw bg image
 	Graphics.fillRect(0, 960, 0, 544, black)
@@ -193,11 +202,11 @@ function drawHomePage()
 	-- Font.print(varwFont, 205, 178, "placeholder", grey)
 end
 
-function drawDZPage(statustext, statuscolour)  -- draw deadzone config page
+function drawDzcfPage(statustext, statuscolour)  -- draw deadzone config page
 	statuscolour = grey or statuscolour
 	-- Display info
 	Font.print(varwFont, 205, 078, arrayToStr(statustext, "; "), statuscolour)
-	-- Font.print(varwFont, 205, 103, arrayToStr("test", ", "), grey)
+	Font.print(varwFont, 205, 103, "axpt = " .. btnposi .. ", back = " .. btnnega, grey)
 	-- Font.print(varwFont, 205, 128, "Press X + O for Sound Test", grey)
 	-- Font.print(varwFont, 205, 153, "placeholder", grey)
 	-- debug print
@@ -220,7 +229,7 @@ function drawBtnInput()  -- all digital buttons
 		1024   ?
 		2048   ?
 		4096   triangle
-		8193   circle
+		8192   circle
 		16384  cross
 		32768  square
 	]]
@@ -367,7 +376,7 @@ function drawInfo(pad, page, dzstatus)  -- main draw function that calls others
 		drawSticks()
 		drawTouch()
 	elseif page == 1 then
-		drawDZPage(anaendbg)
+		drawDzcfPage(anaendbg)
 		drawMiniSticks()
 	end
 
@@ -376,7 +385,7 @@ function drawInfo(pad, page, dzstatus)  -- main draw function that calls others
 	Graphics.termBlend()
 end
 
-function homePageCtrls(pad, ppf) -- ppf = pad prev frame
+function homePageLogic(pad, ppf) -- ppf = pad prev frame
 	-- reset stick max
 	if Controls.check(pad, ltrigger) and Controls.check(pad, rtrigger) then
 		lxmax, lymax, rxmax, rymax = 0.0, 0.0, 0.0, 0.0
@@ -416,6 +425,18 @@ function homePageCtrls(pad, ppf) -- ppf = pad prev frame
 	-- end
 end
 
+function dzcfPageLogic(pad, ppf)  -- deadzone config page
+	if (Controls.check(pad, btnnega) and not Controls.check(ppf, btnnega)) then
+		currPage = 0  -- for now just exit back to homescreen
+	end
+end
+
+
+-- function main(pad)  --  i don't know if this is a paradigm in lua
+	-- ztodo pull this all out from the main loop
+	-- return pad
+-- end
+
 ---------------------------------- main loop ----------------------------------
 while true do
 
@@ -448,10 +469,15 @@ while true do
 
 	dzstatus = ""  -- localscope for now
 
-	homePageCtrls(pad, padprevframe)
+	if currPage == 0 then
+		homePageLogic(pad, padprevframe)
+	elseif currPage == 1 then
+		dzcfPageLogic(pad, padprevframe)
+	end
 
 	drawInfo(pad, currPage, dzstatus)
 
 	padprevframe = pad
+	-- pad = main(pad)
 
 end
