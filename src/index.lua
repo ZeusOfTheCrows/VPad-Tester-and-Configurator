@@ -32,8 +32,8 @@ dpdownimg   = Graphics.loadImage("app0:resources/img/ddn.png")
 dpleftimg   = Graphics.loadImage("app0:resources/img/dlf.png")
 dprightimg  = Graphics.loadImage("app0:resources/img/drt.png")
 analogueimg = Graphics.loadImage("app0:resources/img/ana.png")
-frontTouch  = Graphics.loadImage("app0:resources/img/gry.png")
-backTouch   = Graphics.loadImage("app0:resources/img/blu.png")
+frontTchImg = Graphics.loadImage("app0:resources/img/gry.png")
+rearTchImg  = Graphics.loadImage("app0:resources/img/blu.png")
 
 -- load fonts
 varwFont = Font.load("app0:/resources/fnt/fir-san-reg.ttf")  -- variable width
@@ -49,14 +49,14 @@ audioplaying = false  -- /!\ will change - declared here so it's global
 
 -- offsets touch image to account for image size. should be half of resolution
 -- ztodo? could be automatic, see Graphics.getImageWidth/Height(img)
---               x, y (arrays index from 1...)
-touchoffset  = {30, 32}
+--               x, y (arrays index from 1...) ztodo
+touchoffset  = {x = 30, y = 32}
 -- multiplier for analogue stick size
 anasizemulti = 7.5
 -- global file handle for analogsenhancer config file
 -- anaencfgprops = {}  -- /!\ will change
-anaendbg = ""
-genericdebugtext = ""  -- multipurpose debug text ztodo remove this
+anaendbg = ""  -- dbg ztodo remove
+genericdebugtext = ""  -- multipurpose global debug text ztodo remove this
 -- analogsenhancer config paths
 anaencfgpaths = {"ur0:tai/AnaEnaCfg.txt", "ux0:data/AnalogsEnhancer/config.txt"}
 dzstatustext = {
@@ -86,10 +86,11 @@ btnaccept = (Controls.getEnterButton() == 8192) and circle or cross
 btncancel = (btnaccept == circle) and cross or circle
 
 -- init vars to avoid nil
+-- move to just before read
 lx, ly, rx, ry = 0.0, 0.0, 0.0, 0.0  -- /!\ will change
 lxmax, lymax, rxmax, rymax = 0.0, 0.0, 0.0, 0.0  -- /!\ will change
 -- for converting keyread to keydown - updates at end of frame
-padprevframe = 0  -- /!\ will change
+-- padprevframe = 0  -- /!\ will change
 -- current page (0=home, 1=deadzone config, etc.)
 currPage = 0  -- /!\ will change
 
@@ -113,16 +114,37 @@ function arrayToStr(arrayval, sepchars)  -- i hate this language.
 		return arrayval
 	else
 		r = ""
-		for i, v in ipairs(arrayval) do
+		local frst = true  -- first iteration of loop
+		for k, v in pairs(arrayval) do
 			-- for first iter don't print preceding ";"
-			if i == 1 then
-				r = r .. v
+			if first then
+				r = r .. k .. "," .. v
+				first = false
 			else
-				r = r .. sepchars .. v
+				r = r .. sepchars .. k .. "," .. v
 			end
 		end
 		return r
 	end
+end
+
+function touchValsToTable(...)  -- readTouch values to table
+	-- convert values returned from Controls.read[Retro]Touch() into
+	-- coherent x = y dictionary
+	local exes, wyes, rtn = {}, {}, {}
+	-- assign to two separate vars
+	for i, v in ipairs({...}) do
+		if i%2 == 1 then
+			table.insert(exes, v)
+		else
+			table.insert(wyes, v)
+		end
+	end
+	-- combine x's and y's together
+	for i, v in ipairs(exes) do
+		rtn[v] = wyes[i]
+	end
+	return rtn
 end
 
 function calcMax(currNum, currMax)  -- calculating "max" of stick range from 0
@@ -199,8 +221,7 @@ function drawHomePage()
 	Font.print(varwFont, 205, 103, "press L + R to reset max stick range", grey)
 	Font.print(varwFont, 205, 128, "press Χ + Ο for audio test", grey)
 	Font.print(varwFont, 205, 153, "press Δ + Π for deadzone config", grey)
-	-- debug print
-	-- Font.print(varwFont, 205, 178, "placeholder", grey)
+	Font.print(varwFont, 205, 178, genericdebugtext, grey)
 end
 
 function drawDzcfPage(statustext, statuscolour)  -- draw deadzone config page
@@ -324,44 +345,24 @@ function drawMiniSticks()  -- smaller stick circle for deadzone config
 	Graphics.fillCircle((806 + rx / 3.33), (266 + ry / 3.33), 4, bright)
 end
 
-function drawTouch()  -- fingerprint denoting front/rear touch
-	if tx1 ~= nil then
-		Graphics.drawImage(tx1-touchoffset[1], ty1-touchoffset[2], frontTouch)
-	end
-	if tx2 ~= nil then
-		Graphics.drawImage(tx2-touchoffset[1], ty2-touchoffset[2], frontTouch)
-	end
-	if tx3 ~= nil then
-		Graphics.drawImage(tx3-touchoffset[1], ty3-touchoffset[2], frontTouch)
-	end
-	if tx4 ~= nil then
-		Graphics.drawImage(tx4-touchoffset[1], ty4-touchoffset[2], frontTouch)
-	end
-	if tx5 ~= nil then
-		Graphics.drawImage(tx5-touchoffset[1], ty5-touchoffset[2], frontTouch)
-	end
-	if tx6 ~= nil then
-		Graphics.drawImage(tx6-touchoffset[1], ty6-touchoffset[2], frontTouch)
+function drawTouch(fronttouch, reartouch)  -- print denoting front/rear touch
+	for x, y in pairs(fronttouch) do
+		if x ~= nil then  -- /!\ N.B. x/y are not equivalent to table.x/y
+			Graphics.drawImage(x - touchoffset.x, y - touchoffset.y, frontTchImg)
+		end
 	end
 
-	if rtx1 ~= nil then
-		Graphics.drawImage(rtx1-touchoffset[1], rty1-touchoffset[2], backTouch)
-	end
-	if rtx2 ~= nil then
-		Graphics.drawImage(rtx2-touchoffset[1], rty2-touchoffset[2], backTouch)
-	end
-	if rtx3 ~= nil then
-		Graphics.drawImage(rtx3-touchoffset[1], rty3-touchoffset[2], backTouch)
-	end
-	if rtx4 ~= nil then
-		Graphics.drawImage(rtx4-touchoffset[1], rty4-touchoffset[2], backTouch)
+	for x, y in pairs(reartouch) do
+		if x ~= nil then
+			Graphics.drawImage(x - touchoffset.x, y - touchoffset.y, rearTchImg)
+		end
 	end
 end
 
 ------------------------------ caller functions -------------------------------
 ---------------- (functions that call other smaller functions) ----------------
 
-function drawInfo(pad, page, dzstatus)  -- main draw function that calls others
+function drawInfo(pad, page, fronttouch, reartouch, dzstatus)  -- main draw function that calls others
 
 	page = page or 0  -- default value for current page
 
@@ -377,7 +378,7 @@ function drawInfo(pad, page, dzstatus)  -- main draw function that calls others
 	if page == 0 then
 		drawHomePage()
 		drawSticks()
-		drawTouch()
+		drawTouch(fronttouch, reartouch)
 	elseif page == 1 then
 		drawDzcfPage(anaendbg)
 		drawMiniSticks()
@@ -462,12 +463,9 @@ function main(padprevframe)
 	rxmax = calcMax(rx, rxmax)
 	rymax = calcMax(ry, rymax)
 
-	-- init/update touch registration (not globals as not drawn if nil)
-	tx1, ty1, tx2, ty2, tx3, ty3,
-	tx4, ty4, tx5, ty5, tx6, ty6
-	= Controls.readTouch()
-
-	rtx1, rty1, rtx2, rty2, rtx4, rty4 = Controls.readRetroTouch()
+	-- init/update touch registration (not drawn if nil)
+	fronttouch = touchValsToTable(Controls.readTouch())
+	reartouch = touchValsToTable(Controls.readRetroTouch())
 
 	dzstatus = ""  -- localscope for now
 
@@ -477,7 +475,7 @@ function main(padprevframe)
 		dzcfPageLogic(pad, padprevframe)
 	end
 
-	drawInfo(pad, currPage, dzstatus)
+	drawInfo(pad, currPage, fronttouch, reartouch, dzstatus)
 
 	return pad  -- see main loop
 end
