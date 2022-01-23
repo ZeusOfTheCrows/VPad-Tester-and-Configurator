@@ -18,7 +18,7 @@ grey   = Color.new(189, 174, 147)
 black  = Color.new(040, 040, 040)
 
 -- load images from files
-bgimg       = Graphics.loadImage("app0:resources/img/bgd.png")
+bgdimg      = Graphics.loadImage("app0:resources/img/bgd.png")
 crossimg    = Graphics.loadImage("app0:resources/img/crs.png")
 squareimg   = Graphics.loadImage("app0:resources/img/sqr.png")
 circleimg   = Graphics.loadImage("app0:resources/img/ccl.png")
@@ -58,7 +58,7 @@ anasizemulti = 7.5
 anaendbg = ""  -- dbg ztodo remove
 genericdebugtext = ""  -- multipurpose global debug text ztodo remove this
 -- analogsenhancer config paths
-anaencfgpaths = {"ur0:tai/AnaEnaCfg.txt", "ux0:data/AnalogsEnhancer/config.txt"}
+anaencfgpaths = {"ur0:tai/AnaEnaCfg.txt","ux0:data/AnalogsEnhancer/config.txt"}
 dzstatustext = {
 	"config loaded from ",
 	"cannot find file. is plugin installed?",
@@ -98,9 +98,9 @@ currPage = 0  -- /!\ will change
 
 function lPad(str, len, char)  -- for padding numbers, to avoid jumping text
 	-- default arguments
-	len = len or 3
-	char = char or "0"
-	str = tostring(str)
+	local len = len or 3
+	local char = char or "0"
+	local str = tostring(str)
 	if char == nil then char = '' end
 	return string.rep(char, len - #str) .. str
 end
@@ -108,12 +108,12 @@ end
 function arrayToStr(arrayval, sepchars)  -- i hate this language.
 	-- i know table.concat exists, but this doesn't have a tizz when told to
 	-- concatenate a string (advanced programming i know)
-	sepchars = sepchars or "; "
+	local sepchars = sepchars or "; "
 	-- check if is already string (not necessary, but saves headaches)
 	if type(arrayval) == "string" then
 		return arrayval
 	else
-		r = ""
+		local r = ""
 		local frst = true  -- first iteration of loop
 		for k, v in pairs(arrayval) do
 			-- for first iter don't print preceding ";"
@@ -148,8 +148,8 @@ function touchValsToTable(...)  -- readTouch values to table
 end
 
 function calcMax(currNum, currMax)  -- calculating "max" of stick range from 0
-	num = math.abs(currNum - 127)
-	max = math.abs(currMax)
+	local num = math.abs(currNum - 127)
+	local max = math.abs(currMax)
 	if num > max then
 		return num
 	else
@@ -160,16 +160,16 @@ end
 function openFile(filepaths)  -- find existing file and return, or return false
 	for i, p in ipairs(filepaths) do
 		if System.doesFileExist(p) then
-			--                                first 4 letters of path (for id'ing)
-			return System.openFile(p, FREAD), string.sub(p,1,4)
+			--                                first 3 letters of path (for id'ing)
+			return System.openFile(p, FREAD), string.sub(p,1,3)
 		end
 	end
 	return false, ""
 end
 
 function parseCfgFile(filepaths)  -- read config file and return info (check)
-	anaenprops = {}
-	file, output = openFile(filepaths)
+	local anaenprops = {}
+	local file, output = openFile(filepaths)
 	if file then
 		file = System.readFile(file, System.sizeFile(file))
 		-- match set of one or more of all alphanumeric chars
@@ -179,14 +179,15 @@ function parseCfgFile(filepaths)  -- read config file and return info (check)
 		-- System.closeFile(file)
 		return anaenprops, output
 	else
-		return "false", output
+		return "false", output  -- ztodo
 	end
 end
 
 function toggleAudio()  -- no arguments because it has to be a global, i think
 	-- /!\ Sound.isPlaying does not work. whether 'tis my bug or native, i do
 	-- /!\ not know; but once toggled twice it always returns false
-	audioplaying = not audioplaying  -- toggle bool
+	audioplaying = not audioplaying  -- toggle bool ztodo local
+	-- if audiofile ~= nil?
 	if audioplaying then
 		-- i don't think this is great for performance, but i have to Sound.close
 		-- the file as Sound.pause doesn't consistently pause
@@ -207,7 +208,7 @@ end
 function drawDecs()  -- draw decorations (title, frame etc.)
 	-- colour background & draw bg image
 	Graphics.fillRect(0, 960, 0, 544, black)
-	Graphics.drawImage(0, 40, bgimg)
+	Graphics.drawImage(0, 40, bgdimg)
 
 	-- draw header info
 	Font.print(varwFont, 008, 004,
@@ -225,7 +226,7 @@ function drawHomePage()
 end
 
 function drawDzcfPage(statustext, statuscolour)  -- draw deadzone config page
-	statuscolour = grey or statuscolour
+	local statuscolour = grey or statuscolour
 	-- Display info
 	Font.print(varwFont, 205, 078, arrayToStr(statustext, "; "), statuscolour)
 	-- Font.print(varwFont, 205, 103,
@@ -258,6 +259,8 @@ function drawBtnInput()  -- all digital buttons
 		32768  square
 	]]
 
+	-- for i in table if convert buttons to table ztodo
+
 	--  Draw buttons if pressed
 	if Controls.check(pad, circle) then
 		Graphics.drawImage(888, 169, circleimg)
@@ -279,7 +282,7 @@ function drawBtnInput()  -- all digital buttons
 		Graphics.drawImage(858, 378, sttselctimg)
 	end
 	if Controls.check(pad, home) then
-		-- this only gets called whilst the home button is enabled. this means i
+		-- this only gets called whilst the home button is enabled. this means
 		-- i can't use Controls.lockHomeButton():
 		Graphics.drawImage(087, 376, homeimg)
 	end
@@ -291,7 +294,7 @@ function drawBtnInput()  -- all digital buttons
 		Graphics.drawImage(775, 43, rtriggerimg)
 	end
 
-	-- i don't use drawRotateImage due a bug (probably in vita2d) that draws the
+	-- i don't use drawRotateImage due a bug (maybe in vita2d) that draws the
 	-- images incorrectly (fuzzy broken borders, misplaced pixels). if you're
 	-- editing this in the future, check if it's been fixed to reduce vpk size
 	if Controls.check(pad, dpup) then
@@ -362,9 +365,9 @@ end
 ------------------------------ caller functions -------------------------------
 ---------------- (functions that call other smaller functions) ----------------
 
-function drawInfo(pad, page, fronttouch, reartouch, dzstatus)  -- main draw function that calls others
-
-	page = page or 0  -- default value for current page
+function drawInfo(pad, page, fronttouch, reartouch, dzstatus)
+	-- main draw function that calls others
+	local page = page or 0  -- default value for current page
 
 	-- Starting drawing phase
 	-- i'm not sure clearing the screen every frame is the best way to do this,
@@ -430,7 +433,7 @@ function homePageLogic(pad, ppf) -- ppf = pad prev frame
 end
 
 function dzcfPageLogic(pad, ppf)  -- deadzone config page
-	if (Controls.check(pad, btncancel) and not Controls.check(ppf, btncancel)) then
+	if(Controls.check(pad,btncancel) and not Controls.check(ppf,btncancel)) then
 		currPage = 0  -- for now just exit back to homescreen
 	end
 end
