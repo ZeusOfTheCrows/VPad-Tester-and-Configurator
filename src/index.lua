@@ -8,32 +8,34 @@
 -- practice, but i find it makes more sense
 
 -- global colours
-white  = Color.new(235, 219, 178)
-bright = Color.new(251, 241, 199)
-orange = Color.new(254, 128, 025)
-red    = Color.new(204, 036, 029)
-dred   = Color.new(204, 036, 029, 128)
-green  = Color.new(152, 151, 026)
-grey   = Color.new(189, 174, 147)
-black  = Color.new(040, 040, 040)
+clr = {
+	white  = Color.new(235, 219, 178),
+	bright = Color.new(251, 241, 199),
+	orange = Color.new(254, 128, 025),
+	red    = Color.new(204, 036, 029),
+	dred   = Color.new(204, 036, 029, 128),
+	green  = Color.new(152, 151, 026),
+	grey   = Color.new(189, 174, 147),
+	black  = Color.new(040, 040, 040)}
 
 -- load images from files
-bgdimg      = Graphics.loadImage("app0:resources/img/bgd.png")
-crossimg    = Graphics.loadImage("app0:resources/img/crs.png")
-squareimg   = Graphics.loadImage("app0:resources/img/sqr.png")
-circleimg   = Graphics.loadImage("app0:resources/img/ccl.png")
-triangleimg = Graphics.loadImage("app0:resources/img/tri.png")
-sttselctimg = Graphics.loadImage("app0:resources/img/ssl.png")
-homeimg     = Graphics.loadImage("app0:resources/img/hom.png")
-rtriggerimg = Graphics.loadImage("app0:resources/img/rtr.png")
-ltriggerimg = Graphics.loadImage("app0:resources/img/ltr.png")
-dpupimg     = Graphics.loadImage("app0:resources/img/dup.png")
-dpdownimg   = Graphics.loadImage("app0:resources/img/ddn.png")
-dpleftimg   = Graphics.loadImage("app0:resources/img/dlf.png")
-dprightimg  = Graphics.loadImage("app0:resources/img/drt.png")
-analogueimg = Graphics.loadImage("app0:resources/img/ana.png")
-frontTchImg = Graphics.loadImage("app0:resources/img/gry.png")
-rearTchImg  = Graphics.loadImage("app0:resources/img/blu.png")
+img = {
+	bgd      = Graphics.loadImage("app0:resources/img/bgd.png"),
+	cross    = Graphics.loadImage("app0:resources/img/crs.png"),
+	square   = Graphics.loadImage("app0:resources/img/sqr.png"),
+	circle   = Graphics.loadImage("app0:resources/img/ccl.png"),
+	triangle = Graphics.loadImage("app0:resources/img/tri.png"),
+	sttSelct = Graphics.loadImage("app0:resources/img/ssl.png"),
+	home     = Graphics.loadImage("app0:resources/img/hom.png"),
+	rTrigger = Graphics.loadImage("app0:resources/img/rtr.png"),
+	lTrigger = Graphics.loadImage("app0:resources/img/ltr.png"),
+	dpUp     = Graphics.loadImage("app0:resources/img/dup.png"),
+	dpDown   = Graphics.loadImage("app0:resources/img/ddn.png"),
+	dpLeft   = Graphics.loadImage("app0:resources/img/dlf.png"),
+	dpRight  = Graphics.loadImage("app0:resources/img/drt.png"),
+	analogue = Graphics.loadImage("app0:resources/img/ana.png"),
+	frontTch = Graphics.loadImage("app0:resources/img/gry.png"),
+	rearTch  = Graphics.loadImage("app0:resources/img/blu.png")}
 
 -- load fonts
 varwFont = Font.load("app0:/resources/fnt/fir-san-reg.ttf")  -- variable width
@@ -49,7 +51,6 @@ audioplaying = false  -- /!\ will change - declared here so it's global
 
 -- offsets touch image to account for image size. should be half of resolution
 -- ztodo? could be automatic, see Graphics.getImageWidth/Height(img)
---               x, y (arrays index from 1...) ztodo
 touchoffset  = {x = 30, y = 32}
 -- multiplier for analogue stick size
 anasizemulti = 7.5
@@ -63,27 +64,28 @@ dzstatustext = {
 	"config loaded from ",
 	"cannot find file. is plugin installed?",
 	"config loaded. it is recommended to set deadzones to 0 before configuring",
-	"config successfully set. reboot to apply changes"
-}
+	"config successfully set. reboot to apply changes"}
 
 -- short button names
-cross    = SCE_CTRL_CROSS
-square   = SCE_CTRL_SQUARE
-circle   = SCE_CTRL_CIRCLE
-triangle = SCE_CTRL_TRIANGLE
-start    = SCE_CTRL_START
-select   = SCE_CTRL_SELECT
-home     = SCE_CTRL_PSBUTTON  -- hmmm... see draw function line ~270
-rtrigger = SCE_CTRL_RTRIGGER
-ltrigger = SCE_CTRL_LTRIGGER
-dpup     = SCE_CTRL_UP
-dpdown   = SCE_CTRL_DOWN
-dpleft   = SCE_CTRL_LEFT
-dpright  = SCE_CTRL_RIGHT
--- get system accept button–if 2^13 (13þ bit) assign circle, else cross
-btnaccept = (Controls.getEnterButton() == 8192) and circle or cross
--- assign back button based on previous result
-btncancel = (btnaccept == circle) and cross or circle
+btn = {
+	cross    = SCE_CTRL_CROSS,
+	square   = SCE_CTRL_SQUARE,
+	circle   = SCE_CTRL_CIRCLE,
+	triangle = SCE_CTRL_TRIANGLE,
+	start    = SCE_CTRL_START,
+	select   = SCE_CTRL_SELECT,
+	home     = SCE_CTRL_PSBUTTON,  -- hmmm... see draw function line ~270
+	rTrigger = SCE_CTRL_RTRIGGER,
+	lTrigger = SCE_CTRL_LTRIGGER,
+	dpUp     = SCE_CTRL_UP,
+	dpDown   = SCE_CTRL_DOWN,
+	dpLeft   = SCE_CTRL_LEFT,
+	dpRight  = SCE_CTRL_RIGHT}  -- indent nex lines so they fold (in sublime)
+	-- get system accept button–if 2^13 (13þ bit) assign circle, else cross
+	btn.accept = (Controls.getEnterButton() == 8192) and btn.circle or btn.cross
+	-- assign back button based on previous result
+	btn.cancel = (btn.accept == btn.circle) and btn.cross or btn.circle
+
 
 -- init vars to avoid nil
 -- move to just before read
@@ -207,35 +209,36 @@ end
 
 function drawDecs()  -- draw decorations (title, frame etc.)
 	-- colour background & draw bg image
-	Graphics.fillRect(0, 960, 0, 544, black)
-	Graphics.drawImage(0, 40, bgdimg)
+	Graphics.fillRect(0, 960, 0, 544, clr.black)
+	Graphics.drawImage(0, 40, img.bgd)
 
 	-- draw header info
 	Font.print(varwFont, 008, 004,
-		"VPad Tester & Configurator v1.3.0 by ZeusOfTheCrows", orange)
+		"VPad Tester & Configurator v1.3.0 by ZeusOfTheCrows", clr.orange)
 	Font.print(monoFont, 904, 004,  battpercent .. "%", battcolr)
 end
 
 function drawHomePage()
 	-- Display info
-	Font.print(varwFont, 205, 078, "press Start + Select to exit", grey)
-	Font.print(varwFont, 205, 103, "press L + R to reset max stick range", grey)
-	Font.print(varwFont, 205, 128, "press Χ + Ο for audio test", grey)
-	Font.print(varwFont, 205, 153, "press Δ + Π for deadzone config", grey)
-	Font.print(varwFont, 205, 178, genericdebugtext, grey)
+	Font.print(varwFont, 205, 078, "press Start + Select to exit", clr.grey)
+	Font.print(varwFont, 205, 103,
+		"press L + R to reset max stick range", clr.grey)
+	Font.print(varwFont, 205, 128, "press Χ + Ο for audio test", clr.grey)
+	Font.print(varwFont, 205, 153, "press Δ + Π for deadzone config", clr.grey)
+	Font.print(varwFont, 205, 178, genericdebugtext, clr.grey)
 end
 
 function drawDzcfPage(statustext, statuscolour)  -- draw deadzone config page
-	local statuscolour = grey or statuscolour
+	local statuscolour = clr.grey or statuscolour
 	-- Display info
 	Font.print(varwFont, 205, 078, arrayToStr(statustext, "; "), statuscolour)
 	-- Font.print(varwFont, 205, 103,
-	-- "axpt = " .. btnaccept .. ", back = " .. btncancel, grey
+	-- "axpt = " .. btnaccept .. ", back = " .. btncancel, clr.grey
 	-- )
-	-- Font.print(varwFont, 205, 128, "Press X + O for Sound Test", grey)
-	-- Font.print(varwFont, 205, 153, "placeholder", grey)
+	-- Font.print(varwFont, 205, 128, "Press X + O for Sound Test", clr.grey)
+	-- Font.print(varwFont, 205, 153, "placeholder", clr.grey)
 	-- debug print
-	-- Font.print(varwFont, 205, 178, "placeholder", grey)
+	-- Font.print(varwFont, 205, 178, "placeholder", clr.grey)
 end
 
 function drawBtnInput()  -- all digital buttons
@@ -262,56 +265,56 @@ function drawBtnInput()  -- all digital buttons
 	-- for i in table if convert buttons to table ztodo
 
 	--  Draw buttons if pressed
-	if Controls.check(pad, circle) then
-		Graphics.drawImage(888, 169, circleimg)
+	if Controls.check(pad, btn.circle) then
+		Graphics.drawImage(888, 169, img.circle)
 	end
-	if Controls.check(pad, cross) then
-		Graphics.drawImage(849, 207, crossimg)
+	if Controls.check(pad, btn.cross) then
+		Graphics.drawImage(849, 207, img.cross)
 	end
-	if Controls.check(pad, triangle) then
-		Graphics.drawImage(849, 130, triangleimg)
+	if Controls.check(pad, btn.triangle) then
+		Graphics.drawImage(849, 130, img.triangle)
 	end
-	if Controls.check(pad, square) then
-		Graphics.drawImage(812, 169, squareimg)
+	if Controls.check(pad, btn.square) then
+		Graphics.drawImage(812, 169, img.square)
 	end
 
-	if Controls.check(pad, select) then
-		Graphics.drawImage(807, 378, sttselctimg)
+	if Controls.check(pad, btn.select) then
+		Graphics.drawImage(807, 378, img.sttSelct)
 	end
-	if Controls.check(pad, start) then
-		Graphics.drawImage(858, 378, sttselctimg)
+	if Controls.check(pad, btn.start) then
+		Graphics.drawImage(858, 378, img.sttSelct)
 	end
-	if Controls.check(pad, home) then
+	if Controls.check(pad, btn.home) then
 		-- this only gets called whilst the home button is enabled. this means
 		-- i can't use Controls.lockHomeButton():
-		Graphics.drawImage(087, 376, homeimg)
+		Graphics.drawImage(087, 376, img.home)
 	end
 
-	if Controls.check(pad, ltrigger) then
-		Graphics.drawImage(68, 43, ltriggerimg)
+	if Controls.check(pad, btn.lTrigger) then
+		Graphics.drawImage(068, 043, img.lTrigger)
 	end
-	if Controls.check(pad, rtrigger) then
-		Graphics.drawImage(775, 43, rtriggerimg)
+	if Controls.check(pad, btn.rTrigger) then
+		Graphics.drawImage(775, 043, img.rTrigger)
 	end
 
 	-- i don't use drawRotateImage due a bug (maybe in vita2d) that draws the
 	-- images incorrectly (fuzzy broken borders, misplaced pixels). if you're
 	-- editing this in the future, check if it's been fixed to reduce vpk size
-	if Controls.check(pad, dpup) then
+	if Controls.check(pad, btn.dpUp) then
 		-- Graphics.drawRotateImage(97, 158, dpupimg, 0)
-		Graphics.drawImage(77, 134, dpupimg)
+		Graphics.drawImage(077, 134, img.dpUp)
 	end
-	if Controls.check(pad, dpdown) then
+	if Controls.check(pad, btn.dpDown) then
 		-- Graphics.drawRotateImage(98, 216, dpupimg, 3.141593)
-		Graphics.drawImage(77, 193, dpdownimg)
+		Graphics.drawImage(077, 193, img.dpDown)
 	end
-	if Controls.check(pad, dpleft) then
+	if Controls.check(pad, btn.dpLeft) then
 		-- Graphics.drawRotateImage(69, 188, dpupimg, 4.712389)
-		Graphics.drawImage(44, 167, dpleftimg)
+		Graphics.drawImage(044, 167, img.dpLeft)
 	end
-	if Controls.check(pad, dpright) then
+	if Controls.check(pad, btn.dpRight) then
 		-- Graphics.drawRotateImage(128, 187, dpupimg, 1.570796)
-		Graphics.drawImage(103, 167, dprightimg)
+		Graphics.drawImage(103, 167, img.dpRight)
 	end
 end
 
@@ -321,43 +324,43 @@ function drawSticks()  -- fullsize analogue sticks
 	Graphics.drawImage(
 		(073+(lx/anasizemulti)),
 		(252+(ly/anasizemulti)),
-		analogueimg)
+		img.analogue)
 
 	-- default position: 810, 270
 	Graphics.drawImage(
 		(793+(rx/anasizemulti)),
 		(252+(ry/anasizemulti)),
-		analogueimg)
+		img.analogue)
 end
 
 function drawStickText()  -- bottom two lines of info numbers
 	Font.print(monoFont, 010, 480, "Left: " .. lPad(lx) .. ", " .. lPad(ly) ..
-	                    "\nMax:  " .. lPad(lxmax) .. ", " .. lPad(lymax), white)
+	                "\nMax:  " .. lPad(lxmax) .. ", " .. lPad(lymax), clr.white)
 	Font.print(monoFont, 670, 482, "Right: " .. lPad(rx) .. ", " .. lPad(ry) ..
-		                "\nMax:   " .. lPad(rxmax) .. ", " .. lPad(rymax), white)
+		            "\nMax:   " .. lPad(rxmax) .. ", " .. lPad(rymax), clr.white)
 end
 
 function drawMiniSticks()  -- smaller stick circle for deadzone config
 	-- draw recommended deadzones 137, 300
-	Graphics.fillCircle(124, 304, ((math.max(lxmax, lymax) * 0.3) + 4), dred)
-	Graphics.fillCircle(844, 304, ((math.max(rxmax, rymax) * 0.3) + 4), dred)
+	Graphics.fillCircle(124, 304, ((math.max(lxmax, lymax)*0.3) + 4), clr.dred)
+	Graphics.fillCircle(844, 304, ((math.max(rxmax, rymax)*0.3) + 4), clr.dred)
 
 	-- default position: 124, 304 (-(128/3.33†)) †stick movement multiplier
-	Graphics.fillCircle((086 + lx / 3.33), (266 + ly / 3.33), 4, bright)
+	Graphics.fillCircle((086 + lx / 3.33), (266 + ly / 3.33), 4, clr.bright)
 	-- default position: 844, 304
-	Graphics.fillCircle((806 + rx / 3.33), (266 + ry / 3.33), 4, bright)
+	Graphics.fillCircle((806 + rx / 3.33), (266 + ry / 3.33), 4, clr.bright)
 end
 
 function drawTouch(fronttouch, reartouch)  -- print denoting front/rear touch
 	for x, y in pairs(fronttouch) do
 		if x ~= nil then  -- /!\ N.B. x/y are not equivalent to table.x/y
-			Graphics.drawImage(x - touchoffset.x, y - touchoffset.y, frontTchImg)
+			Graphics.drawImage(x - touchoffset.x, y - touchoffset.y, img.frontTch)
 		end
 	end
 
 	for x, y in pairs(reartouch) do
 		if x ~= nil then
-			Graphics.drawImage(x - touchoffset.x, y - touchoffset.y, rearTchImg)
+			Graphics.drawImage(x - touchoffset.x, y - touchoffset.y, img.rearTch)
 		end
 	end
 end
@@ -394,28 +397,33 @@ end
 
 function homePageLogic(pad, ppf) -- ppf = pad prev frame
 	-- reset stick max
-	if Controls.check(pad, ltrigger) and Controls.check(pad, rtrigger) then
+	if Controls.check(pad, btn.lTrigger) and
+	   Controls.check(pad, btn.rTrigger) then
 		lxmax, lymax, rxmax, rymax = 0.0, 0.0, 0.0, 0.0
 	end
 
 	-- Sound Testing
 	-- this is the mess that comes of not having a keydown event
-	if (Controls.check(pad, cross) and
-	   (Controls.check(pad, circle) and not Controls.check(ppf, circle))) or
-	   (Controls.check(pad, circle) and
-	   (Controls.check(pad, cross) and not Controls.check(ppf, cross))) then
+	if (Controls.check(pad, btn.cross) and
+	   (Controls.check(pad, btn.circle) and not
+	    Controls.check(ppf, btn.circle))) or
+	   (Controls.check(pad, btn.circle) and
+	   (Controls.check(pad, btn.cross) and not
+	    Controls.check(ppf, btn.cross))) then
 		toggleAudio()
 	end
 
-	if (Controls.check(pad, square) and
-	   (Controls.check(pad, triangle) and not Controls.check(ppf, triangle))) or
-	   (Controls.check(pad, triangle) and
-	   (Controls.check(pad, square) and not Controls.check(ppf, square))) then
+	if (Controls.check(pad, btn.square) and
+	   (Controls.check(pad, btn.triangle) and not
+	    Controls.check(ppf, btn.triangle))) or
+	   (Controls.check(pad, btn.triangle) and
+	   (Controls.check(pad, btn.square) and not
+	    Controls.check(ppf, btn.square))) then
 		currPage = 1
 		anaendbg, dzstatus = parseCfgFile(anaencfgpaths)
 	end
 
-	if Controls.check(pad, start) and Controls.check(pad, select) then
+	if Controls.check(pad, btn.start) and Controls.check(pad, btn.select) then
 		System.exit()
 	end
 
@@ -433,7 +441,8 @@ function homePageLogic(pad, ppf) -- ppf = pad prev frame
 end
 
 function dzcfPageLogic(pad, ppf)  -- deadzone config page
-	if(Controls.check(pad,btncancel) and not Controls.check(ppf,btncancel)) then
+	if(Controls.check(pad, btn.cancel) and not
+	   Controls.check(ppf, btn.cancel)) then
 		currPage = 0  -- for now just exit back to homescreen
 	end
 end
@@ -449,11 +458,11 @@ function main(padprevframe)
 	-- init battery stats
 	battpercent = System.getBatteryPercentage()
 	if System.isBatteryCharging() then
-		battcolr = green
+		battcolr = clr.green
 	elseif battpercent < 15 then
-		battcolr = red
+		battcolr = clr.red
 	else
-		battcolr = grey
+		battcolr = clr.grey
 	end
 
 	-- update sticks
