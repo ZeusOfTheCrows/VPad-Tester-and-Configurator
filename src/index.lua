@@ -107,13 +107,15 @@ function lPad(str, len, char)  -- for padding numbers, to avoid jumping text
 	return string.rep(char, len - #str) .. str
 end
 
-function arrayToStr(arrayval, sepchars)  -- i hate this language.
+function customToStr(arrayval, sepchars)  -- i hate this language.
 	-- i know table.concat exists, but this doesn't have a tizz when told to
 	-- concatenate a string (advanced programming i know)
 	local sepchars = sepchars or "; "
 	-- check if is already string (not necessary, but saves headaches)
 	if type(arrayval) == "string" then
 		return arrayval
+	elseif type(arrayval) == "boolean" then
+		return arrayval and "false" or "true"
 	else
 		local r = ""
 		local frst = true  -- first iteration of loop
@@ -162,7 +164,7 @@ end
 function openFile(filepaths)  -- find existing file and return, or return false
 	for i, p in ipairs(filepaths) do
 		if System.doesFileExist(p) then
-			--                                first 3 letters of path (for id'ing)
+			--                         first 3 letters of path (for id'ing)
 			return System.openFile(p, FREAD), string.sub(p,1,3)
 		end
 	end
@@ -170,18 +172,25 @@ function openFile(filepaths)  -- find existing file and return, or return false
 end
 
 function parseCfgFile(filepaths)  -- read config file and return info (check)
-	local anaenprops = {}
-	local file, output = openFile(filepaths)
+	local anaenraw = {}  -- unparsed ana en properties
+	local anaenprops = {}  -- analogs enhancer properties
+	local file, partt = openFile(filepaths)  -- file handle, partition
 	if file then
 		file = System.readFile(file, System.sizeFile(file))
 		-- match set of one or more of all alphanumeric chars
 		for p in string.gmatch(file, "[%w]+") do
-			table.insert(anaenprops, p)
+			table.insert(anaenraw, p)
 		end
+		-- this is untidy but i see no better way of doing it
+		anaenprops.leftNum = anaenraw[2]
+		anaenprops.leftSRS = anaenraw[3]
+		anaenprops.riteNum = anaenraw[5]
+		anaenprops.riteSRS = anaenraw[6]
+		anaenprops.anawide = anaenraw[7]
 		-- System.closeFile(file)
-		return anaenprops, output
+		return anaenprops, partt
 	else
-		return "false", output  -- ztodo
+		return false, partt  -- ztodo
 	end
 end
 
@@ -231,7 +240,7 @@ end
 function drawDzcfPage(statustext, statuscolour)  -- draw deadzone config page
 	local statuscolour = clr.grey or statuscolour
 	-- Display info
-	Font.print(varwFont, 205, 078, arrayToStr(statustext, "; "), statuscolour)
+	Font.print(varwFont, 205, 078, customToStr(statustext, "; "), statuscolour)
 	-- Font.print(varwFont, 205, 103,
 	-- "axpt = " .. btnaccept .. ", back = " .. btncancel, clr.grey
 	-- )
