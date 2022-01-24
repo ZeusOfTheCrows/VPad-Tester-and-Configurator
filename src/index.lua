@@ -220,7 +220,7 @@ end
 
 ------------------------------ drawing functions ------------------------------
 
-function drawDecs()  -- draw decorations (title, frame etc.)
+function drawDecs(batt)  -- draw decorations (title, frame, battery, etc.)
 	-- colour background & draw bg image
 	Graphics.fillRect(0, 960, 0, 544, clr.black)
 	Graphics.drawImage(0, 40, img.bgd)
@@ -228,7 +228,7 @@ function drawDecs()  -- draw decorations (title, frame etc.)
 	-- draw header info
 	Font.print(varwFont, 008, 004,
 		"VPad Tester & Configurator v1.3.0 by ZeusOfTheCrows", clr.orange)
-	Font.print(monoFont, 904, 004,  battpercent .. "%", battcolr)
+	Font.print(monoFont, 904, 004,  batt.pct .. "%", batt.clr)
 end
 
 function drawHomePage()
@@ -385,7 +385,7 @@ end
 ------------------------------- main functions --------------------------------
 ---------------- (functions that call other smaller functions) ----------------
 
-function drawInfo(pad, page, stkVals, fronttouch, reartouch, dzstatus)
+function drawInfo(pad, page, stkVals, fronttouch, reartouch, batt, dzstatus)
 	-- main draw function that calls others
 	local page = page or 0  -- default value for current page
 
@@ -395,7 +395,7 @@ function drawInfo(pad, page, stkVals, fronttouch, reartouch, dzstatus)
 	Graphics.initBlend()
 	Screen.clear()
 
-	drawDecs()
+	drawDecs(batt)
 	drawBtnInput(pad)
 	drawStickText(stkVals)
 	if page == 0 then
@@ -482,31 +482,22 @@ end
 function main(padPrevFrame)
 	-- i don't know if the "main" function is a paradigm in lua, but
 	-- it seems neater to me
-	-- local stkMax = stkMax or {}
-	local stkVals = {}
+
+	-- init battery stats
+	local batt = {}  -- battery info
+	batt.pct = System.getBatteryPercentage()
+	if System.isBatteryCharging() then
+		batt.clr = clr.green
+	elseif batt.pct < 15 then
+		batt.clr = clr.red
+	else
+		batt.clr = clr.grey
+	end
 
 	-- initialise pad state this frame
 	local pad = Controls.read()
-
-	-- init battery stats
-	battpercent = System.getBatteryPercentage()
-	if System.isBatteryCharging() then
-		battcolr = clr.green
-	elseif battpercent < 15 then
-		battcolr = clr.red
-	else
-		battcolr = clr.grey
-	end
-
-	-- check if nil (should only run once)
-	-- if not stkVals then
-	-- 	stkVals = {}
-	-- end
-	-- if not stkMax then
-	-- 	stkMax  = {}
-	-- end
-
 	-- update sticks
+	local stkVals = {}
 	stkVals.lx, stkVals.ly = Controls.readLeftAnalog()
 	stkVals.rx, stkVals.ry = Controls.readRightAnalog()
 
@@ -516,8 +507,8 @@ function main(padPrevFrame)
 	end
 
 	-- init/update touch registration (not drawn if nil)
-	fronttouch = touchValsToTable(Controls.readTouch())
-	reartouch = touchValsToTable(Controls.readRetroTouch())
+	local fronttouch = touchValsToTable(Controls.readTouch())
+	local reartouch = touchValsToTable(Controls.readRetroTouch())
 
 	dzstatus = ""  -- ztodo
 
@@ -527,7 +518,7 @@ function main(padPrevFrame)
 		dzcfPageLogic(pad, padPrevFrame)
 	end
 
-	drawInfo(pad, currPage, stkVals, fronttouch, reartouch, dzstatus)
+	drawInfo(pad, currPage, stkVals, fronttouch, reartouch, batt, dzstatus)
 
 	return pad  -- see main loop
 end
