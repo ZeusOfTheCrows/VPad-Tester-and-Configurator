@@ -4,7 +4,7 @@
 -------------------------------------------------------------------------------
 
 ----------------------------------- globals -----------------------------------
--- globals marked "/!\ will change" are manipulated in code. i know it's bad
+-- locals marked "/!\ will change" are manipulated in code. i know it's bad
 -- practice, but i find it makes more sense
 
 -- global colours
@@ -17,6 +17,26 @@ clr = {
 	green  = Color.new(152, 151, 026),
 	grey   = Color.new(189, 174, 147),
 	black  = Color.new(040, 040, 040)}
+
+-- short button names
+btn = {
+	cross    = SCE_CTRL_CROSS,
+	square   = SCE_CTRL_SQUARE,
+	circle   = SCE_CTRL_CIRCLE,
+	triangle = SCE_CTRL_TRIANGLE,
+	start    = SCE_CTRL_START,
+	select   = SCE_CTRL_SELECT,
+	home     = SCE_CTRL_PSBUTTON,  -- hmmm... see draw function line ~270
+	rTrigger = SCE_CTRL_RTRIGGER,
+	lTrigger = SCE_CTRL_LTRIGGER,
+	dpUp     = SCE_CTRL_UP,
+	dpDown   = SCE_CTRL_DOWN,
+	dpLeft   = SCE_CTRL_LEFT,
+	dpRight  = SCE_CTRL_RIGHT}  -- indent nex lines so they fold (in sublime)
+	-- get system accept button–if 2^13 (13þ bit) assign circle, else cross
+	btn.accept = (Controls.getEnterButton() == 8192) and btn.circle or btn.cross
+	-- assign back button based on previous result
+	btn.cancel = (btn.accept == btn.circle) and btn.cross or btn.circle
 
 -- load images from files
 img = {
@@ -66,31 +86,13 @@ dzstatustext = {
 	"config loaded. it is recommended to set deadzones to 0 before configuring",
 	"config successfully set. reboot to apply changes"}
 
--- short button names
-btn = {
-	cross    = SCE_CTRL_CROSS,
-	square   = SCE_CTRL_SQUARE,
-	circle   = SCE_CTRL_CIRCLE,
-	triangle = SCE_CTRL_TRIANGLE,
-	start    = SCE_CTRL_START,
-	select   = SCE_CTRL_SELECT,
-	home     = SCE_CTRL_PSBUTTON,  -- hmmm... see draw function line ~270
-	rTrigger = SCE_CTRL_RTRIGGER,
-	lTrigger = SCE_CTRL_LTRIGGER,
-	dpUp     = SCE_CTRL_UP,
-	dpDown   = SCE_CTRL_DOWN,
-	dpLeft   = SCE_CTRL_LEFT,
-	dpRight  = SCE_CTRL_RIGHT}  -- indent nex lines so they fold (in sublime)
-	-- get system accept button–if 2^13 (13þ bit) assign circle, else cross
-	btn.accept = (Controls.getEnterButton() == 8192) and btn.circle or btn.cross
-	-- assign back button based on previous result
-	btn.cancel = (btn.accept == btn.circle) and btn.cross or btn.circle
-
-
 -- init vars to avoid nil
 -- move to just before read
-lx, ly, rx, ry = 0.0, 0.0, 0.0, 0.0  -- /!\ will change
-lxmax, lymax, rxmax, rymax = 0.0, 0.0, 0.0, 0.0  -- /!\ will change
+-- lx, ly, rx, ry = 0.0, 0.0, 0.0, 0.0  -- /!\ will change
+-- lxmax, lymax, rxmax, rymax = 0.0, 0.0, 0.0, 0.0  -- /!\ will change
+-- probably doesn't need to be a global to be persistent,
+-- but i couldn't make it work
+local stkMax = {lx = 0.0, ly = 0.0, rx = 0.0, ry = 0.0}  -- /!\ will change
 -- for converting keyread to keydown - updates at end of frame
 -- padprevframe = 0  -- /!\ will change
 -- current page (0=home, 1=deadzone config, etc.)
@@ -112,13 +114,15 @@ function customToStr(arrayval, sepchars)  -- i hate this language.
 	-- concatenate a string (advanced programming i know)
 	local sepchars = sepchars or "; "
 	-- check if is already string (not necessary, but saves headaches)
-	if type(arrayval) == "string" then
+	if arrayval == nil then
+		return "nil"
+	elseif type(arrayval) == "string" then
 		return arrayval
 	elseif type(arrayval) == "boolean" then
 		return arrayval and "false" or "true"
 	else
 		local r = ""
-		local frst = true  -- first iteration of loop
+		local first = true  -- first iteration of loop
 		for k, v in pairs(arrayval) do
 			-- for first iter don't print preceding ";"
 			if first then
@@ -153,7 +157,7 @@ end
 
 function calcMax(currNum, currMax)  -- calculating "max" of stick range from 0
 	local num = math.abs(currNum - 127)
-	local max = math.abs(currMax)
+	local max = currMax and math.abs(currMax) or 0.0  -- catch if nil
 	if num > max then
 		return num
 	else
@@ -182,11 +186,11 @@ function parseCfgFile(filepaths)  -- read config file and return info (check)
 			table.insert(anaenraw, p)
 		end
 		-- this is untidy but i see no better way of doing it
-		anaenprops.leftNum = anaenraw[2]
-		anaenprops.leftSRS = anaenraw[3]
+		anaenprops.leftNum = anaenraw[2]         -- deadzone value
+		anaenprops.leftSRS = anaenraw[3] == "y"  -- software rescaling (to bool)
 		anaenprops.riteNum = anaenraw[5]
-		anaenprops.riteSRS = anaenraw[6]
-		anaenprops.anawide = anaenraw[7]
+		anaenprops.riteSRS = anaenraw[6] == "y"
+		anaenprops.anawide = anaenraw[7] == "y"  -- analog_wide mode (to bool)
 		-- System.closeFile(file)
 		return anaenprops, partt
 	else
@@ -241,16 +245,14 @@ function drawDzcfPage(statustext, statuscolour)  -- draw deadzone config page
 	local statuscolour = clr.grey or statuscolour
 	-- Display info
 	Font.print(varwFont, 205, 078, customToStr(statustext, "; "), statuscolour)
-	-- Font.print(varwFont, 205, 103,
-	-- "axpt = " .. btnaccept .. ", back = " .. btncancel, clr.grey
-	-- )
+	Font.print(varwFont, 205, 103, "press Δ to reset max stick range", clr.grey)
 	-- Font.print(varwFont, 205, 128, "Press X + O for Sound Test", clr.grey)
 	-- Font.print(varwFont, 205, 153, "placeholder", clr.grey)
 	-- debug print
 	-- Font.print(varwFont, 205, 178, "placeholder", clr.grey)
 end
 
-function drawBtnInput()  -- all digital buttons
+function drawBtnInput(pad)  -- all digital buttons
 
 	--[[ bitmask
 		1      select
@@ -327,37 +329,43 @@ function drawBtnInput()  -- all digital buttons
 	end
 end
 
-function drawSticks()  -- fullsize analogue sticks
+function drawSticks(stkVals)  -- fullsize analogue sticks
 	-- draw and move analogue sticks on screen
 	-- default position: 90, 270 (-(128/anasizemulti)
 	Graphics.drawImage(
-		(073+(lx/anasizemulti)),
-		(252+(ly/anasizemulti)),
+		(073 + (stkVals.lx / anasizemulti)),
+		(252 + (stkVals.ly / anasizemulti)),
 		img.analogue)
 
 	-- default position: 810, 270
 	Graphics.drawImage(
-		(793+(rx/anasizemulti)),
-		(252+(ry/anasizemulti)),
+		(793 + (stkVals.rx / anasizemulti)),
+		(252 + (stkVals.ry / anasizemulti)),
 		img.analogue)
 end
 
-function drawStickText()  -- bottom two lines of info numbers
-	Font.print(monoFont, 010, 480, "Left: " .. lPad(lx) .. ", " .. lPad(ly) ..
-	                "\nMax:  " .. lPad(lxmax) .. ", " .. lPad(lymax), clr.white)
-	Font.print(monoFont, 670, 482, "Right: " .. lPad(rx) .. ", " .. lPad(ry) ..
-		            "\nMax:   " .. lPad(rxmax) .. ", " .. lPad(rymax), clr.white)
+function drawStickText(stkVals)  -- bottom two lines of info numbers
+	Font.print(monoFont, 010, 480,
+	       "Left: " .. lPad(stkVals.lx) .. ", " .. lPad(stkVals.ly) ..
+	       "\nMax:  " .. lPad(stkMax.lx) .. ", " .. lPad(stkMax.ly), clr.white)
+	Font.print(monoFont, 670, 482,
+	       "Right: " .. lPad(stkVals.rx) .. ", " .. lPad(stkVals.ry) ..
+	       "\nMax:   " .. lPad(stkMax.rx) .. ", " .. lPad(stkMax.ry), clr.white)
 end
 
-function drawMiniSticks()  -- smaller stick circle for deadzone config
+function drawMiniSticks(stkVals)  -- smaller stick circle for deadzone config
 	-- draw recommended deadzones 137, 300
-	Graphics.fillCircle(124, 304, ((math.max(lxmax, lymax)*0.3) + 4), clr.dred)
-	Graphics.fillCircle(844, 304, ((math.max(rxmax, rymax)*0.3) + 4), clr.dred)
+	Graphics.fillCircle(124, 304,
+	                   ((math.max(stkMax.lx, stkMax.ly)*0.3) + 4), clr.dred)
+	Graphics.fillCircle(844, 304,
+	                   ((math.max(stkMax.rx, stkMax.ry)*0.3) + 4), clr.dred)
 
 	-- default position: 124, 304 (-(128/3.33†)) †stick movement multiplier
-	Graphics.fillCircle((086 + lx / 3.33), (266 + ly / 3.33), 4, clr.bright)
+	Graphics.fillCircle(
+	        (086 + stkVals.lx / 3.33), (266 + stkVals.ly / 3.33), 4, clr.bright)
 	-- default position: 844, 304
-	Graphics.fillCircle((806 + rx / 3.33), (266 + ry / 3.33), 4, clr.bright)
+	Graphics.fillCircle(
+	        (806 + stkVals.rx / 3.33), (266 + stkVals.ry / 3.33), 4, clr.bright)
 end
 
 function drawTouch(fronttouch, reartouch)  -- print denoting front/rear touch
@@ -374,10 +382,10 @@ function drawTouch(fronttouch, reartouch)  -- print denoting front/rear touch
 	end
 end
 
------------------------------- caller functions -------------------------------
+------------------------------- main functions --------------------------------
 ---------------- (functions that call other smaller functions) ----------------
 
-function drawInfo(pad, page, fronttouch, reartouch, dzstatus)
+function drawInfo(pad, page, stkVals, fronttouch, reartouch, dzstatus)
 	-- main draw function that calls others
 	local page = page or 0  -- default value for current page
 
@@ -388,15 +396,15 @@ function drawInfo(pad, page, fronttouch, reartouch, dzstatus)
 	Screen.clear()
 
 	drawDecs()
-	drawBtnInput()
-	drawStickText()
+	drawBtnInput(pad)
+	drawStickText(stkVals)
 	if page == 0 then
 		drawHomePage()
-		drawSticks()
+		drawSticks(stkVals)
 		drawTouch(fronttouch, reartouch)
 	elseif page == 1 then
 		drawDzcfPage(anaendbg)
-		drawMiniSticks()
+		drawMiniSticks(stkVals)
 	end
 
 	-- Terminating drawing phase
@@ -408,7 +416,9 @@ function homePageLogic(pad, ppf) -- ppf = pad prev frame
 	-- reset stick max
 	if Controls.check(pad, btn.lTrigger) and
 	   Controls.check(pad, btn.rTrigger) then
-		lxmax, lymax, rxmax, rymax = 0.0, 0.0, 0.0, 0.0
+		for k, v in pairs(stkMax) do
+			stkMax[k] = 0.0
+		end
 	end
 
 	-- Sound Testing
@@ -450,19 +460,33 @@ function homePageLogic(pad, ppf) -- ppf = pad prev frame
 end
 
 function dzcfPageLogic(pad, ppf)  -- deadzone config page
+	-- reset stick max
+	if Controls.check(pad, btn.triangle) and not
+	   Controls.check(ppf, btn.triangle) then
+		for k, v in pairs(stkMax) do
+			stkMax[k] = 0.0
+		end
+	end
+	-- ztodo shoulders toggle software rescaling
+	-- if Controls.check(pad, btn.lTrigger) and not
+	   -- Controls.check(ppf, btn.lTrigger) then
+		-- anaenprops.leftSRS = not anaenprops.leftSRS
+	-- end
+	-- exit page
 	if(Controls.check(pad, btn.cancel) and not
 	   Controls.check(ppf, btn.cancel)) then
 		currPage = 0  -- for now just exit back to homescreen
 	end
 end
 
-
-function main(padprevframe)
+function main(padPrevFrame)
 	-- i don't know if the "main" function is a paradigm in lua, but
 	-- it seems neater to me
+	-- local stkMax = stkMax or {}
+	local stkVals = {}
 
 	-- initialise pad state this frame
-	pad = Controls.read()
+	local pad = Controls.read()
 
 	-- init battery stats
 	battpercent = System.getBatteryPercentage()
@@ -474,29 +498,36 @@ function main(padprevframe)
 		battcolr = clr.grey
 	end
 
+	-- check if nil (should only run once)
+	-- if not stkVals then
+	-- 	stkVals = {}
+	-- end
+	-- if not stkMax then
+	-- 	stkMax  = {}
+	-- end
+
 	-- update sticks
-	lx,ly = Controls.readLeftAnalog()
-	rx,ry = Controls.readRightAnalog()
+	stkVals.lx, stkVals.ly = Controls.readLeftAnalog()
+	stkVals.rx, stkVals.ry = Controls.readRightAnalog()
 
 	-- calculate max stick values
-	lxmax = calcMax(lx, lxmax)
-	lymax = calcMax(ly, lymax)
-	rxmax = calcMax(rx, rxmax)
-	rymax = calcMax(ry, rymax)
+	for k, v in pairs(stkMax) do
+		stkMax[k] = calcMax(stkVals[k], stkMax[k])
+	end
 
 	-- init/update touch registration (not drawn if nil)
 	fronttouch = touchValsToTable(Controls.readTouch())
 	reartouch = touchValsToTable(Controls.readRetroTouch())
 
-	dzstatus = ""  -- localscope for now
+	dzstatus = ""  -- ztodo
 
 	if currPage == 0 then
-		homePageLogic(pad, padprevframe)
+		homePageLogic(pad, padPrevFrame)
 	elseif currPage == 1 then
-		dzcfPageLogic(pad, padprevframe)
+		dzcfPageLogic(pad, padPrevFrame)
 	end
 
-	drawInfo(pad, currPage, fronttouch, reartouch, dzstatus)
+	drawInfo(pad, currPage, stkVals, fronttouch, reartouch, dzstatus)
 
 	return pad  -- see main loop
 end
@@ -505,5 +536,6 @@ end
 while true do
 	-- take pad status from previous frame and immediately pass it back
 	-- into the function (which returns the pad at the end)
-	padprevframe = main(padprevframe)
+	-- also make stickmax permanent
+	padPrevFrame = main(padPrevFrame)
 end
