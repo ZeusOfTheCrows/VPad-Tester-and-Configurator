@@ -4,7 +4,7 @@
 -------------------------------------------------------------------------------
 
 ----------------------------------- globals -----------------------------------
--- locals marked "/!\ will change" are manipulated in code. i know it's bad
+-- locals marked /!\ are manipulated in code. i know it's bad
 -- practice, but i find it makes more sense
 
 -- global colours
@@ -13,7 +13,7 @@ clr = {
 	bright = Color.new(251, 241, 199),
 	orange = Color.new(254, 128, 025),
 	red    = Color.new(204, 036, 029),
-	dred   = Color.new(204, 036, 029, 128),
+	dRed   = Color.new(204, 036, 029, 128),
 	green  = Color.new(152, 151, 026),
 	grey   = Color.new(189, 174, 147),
 	black  = Color.new(040, 040, 040)}
@@ -64,14 +64,16 @@ Font.setPixelSizes(varwFont, 24)
 Font.setPixelSizes(monoFont, 24)
 
 -- audio related vars
-Sound.init()
+Sound.init()  -- this is never terminated, but doing so crashes to livearea
 audiopath = "app0:resources/snd/stereo-audio-test.ogg"
-audiofile = 0  -- /!\ will change -- ztodo: i don't think i need this here
-audioplaying = false  -- /!\ will change - declared here so it's global
+audiofile = 0  -- /!\ -- ztodo: i don't think i need this here
+local audioplaying = false  -- /!\
 
 -- offsets touch image to account for image size. should be half of resolution
--- ztodo? could be automatic, see Graphics.getImageWidth/Height(img)
+-- could be automatic, but isn't due to a bug (see lines ~380 & ~315)
 touchoffset  = {x = 30, y = 32}
+-- touchoffset  = {x = Graphics.getImageWidth (img.frontTch)/2,  -- 30
+                -- y = Graphics.getImageHeight(img.frontTch)/2}  -- 32
 -- multiplier for analogue stick size
 anasizemulti = 7.5
 -- global file handle for analogsenhancer config file
@@ -222,7 +224,7 @@ end
 
 function drawDecs(batt)  -- draw decorations (title, frame, battery, etc.)
 	-- colour background & draw bg image
-	Graphics.fillRect(0, 960, 0, 544, clr.black)
+	-- Graphics.fillRect(0, 960, 0, 544, clr.black)
 	Graphics.drawImage(0, 40, img.bgd)
 
 	-- draw header info
@@ -356,9 +358,9 @@ end
 function drawMiniSticks(stkVals)  -- smaller stick circle for deadzone config
 	-- draw recommended deadzones 137, 300
 	Graphics.fillCircle(124, 304,
-	                   ((math.max(stkMax.lx, stkMax.ly)*0.3) + 4), clr.dred)
+	                   ((math.max(stkMax.lx, stkMax.ly)*0.3) + 4), clr.dRed)
 	Graphics.fillCircle(844, 304,
-	                   ((math.max(stkMax.rx, stkMax.ry)*0.3) + 4), clr.dred)
+	                   ((math.max(stkMax.rx, stkMax.ry)*0.3) + 4), clr.dRed)
 
 	-- default position: 124, 304 (-(128/3.33†)) †stick movement multiplier
 	Graphics.fillCircle(
@@ -372,12 +374,18 @@ function drawTouch(fronttouch, reartouch)  -- print denoting front/rear touch
 	for x, y in pairs(fronttouch) do
 		if x ~= nil then  -- /!\ N.B. x/y are not equivalent to table.x/y
 			Graphics.drawImage(x - touchoffset.x, y - touchoffset.y, img.frontTch)
+			-- Graphics.drawImage(x - Graphics.getImageWidth (img.frontTch)/2,
+			--                    y - Graphics.getImageWidth (img.frontTch)/2,
+			--                    img.frontTch)
 		end
 	end
 
 	for x, y in pairs(reartouch) do
 		if x ~= nil then
 			Graphics.drawImage(x - touchoffset.x, y - touchoffset.y, img.rearTch)
+			-- Graphics.drawImage(x - Graphics.getImageWidth (img.rearTch)/2,
+			                   -- y - Graphics.getImageWidth (img.rearTch)/2,
+			                   -- img.rearTch)
 		end
 	end
 end
@@ -393,7 +401,7 @@ function drawInfo(pad, page, stkVals, fronttouch, reartouch, batt, dzstatus)
 	-- i'm not sure clearing the screen every frame is the best way to do this,
 	-- but it's the only way i know (it also breaks psvremap)
 	Graphics.initBlend()
-	Screen.clear()
+	Screen.clear(clr.black)
 
 	drawDecs(batt)
 	drawBtnInput(pad)
@@ -408,8 +416,8 @@ function drawInfo(pad, page, stkVals, fronttouch, reartouch, batt, dzstatus)
 	end
 
 	-- Terminating drawing phase
-	Screen.flip()
 	Graphics.termBlend()
+	Screen.flip()  -- flip framebuffer, i guess?
 end
 
 function homePageLogic(pad, ppf) -- ppf = pad prev frame
