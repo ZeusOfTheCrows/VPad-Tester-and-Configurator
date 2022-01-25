@@ -16,3 +16,4 @@
 
 ![max range logic](./img/max-logic-pic.png)
 
+a compressed (reduced character set) version of the fira fonts is included, so be wary when using non-ascii characters. both are licenced under under [SIL OFL](https://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL) (also see [WF&RFN](https://scripts.sil.org/cms/scripts/page.php?item_id=OFL_web_fonts_and_RFNs))
