@@ -4,19 +4,20 @@
 -------------------------------------------------------------------------------
 
 ----------------------------------- globals -----------------------------------
--- locals marked /!\ are manipulated in code. i know it's bad
--- practice, but i find it makes more sense
+-- locals marked /!\ are manipulated in code. i know it's bad practice, but i
+-- find it makes more sense. also they're all marked as local - i found lots of
+-- info on why locals are better and much faster, and none on why they're worse
 
 -- global colours
 clr = {
 	white  = Color.new(235, 219, 178),
 	bright = Color.new(251, 241, 199),
 	orange = Color.new(254, 128, 025),
-	red    = Color.new(204, 036, 029),
+	red    = Color.new(251, 073, 052),
 	dRed   = Color.new(204, 036, 029, 128),
 	green  = Color.new(152, 151, 026),
 	grey   = Color.new(189, 174, 147),
-	black  = Color.new(040, 040, 040)}
+	black  = Color.new(040, 040, 040)}--ztodo check this works
 
 -- short button names
 btn = {
@@ -70,8 +71,8 @@ audiofile = 0  -- /!\ -- ztodo: i don't think i need this here
 local audioplaying = false  -- /!\
 
 -- offsets touch image to account for image size. should be half of resolution
--- could be automatic, but isn't due to a bug (see lines ~380 & ~315)
-touchoffset  = {x = 30, y = 32}
+touchoffset = {x = 30, y = 32}
+-- could be automatic, but isn't due to a bug (see lines ~380 & ~315):
 -- touchoffset  = {x = Graphics.getImageWidth (img.frontTch)/2,  -- 30
                 -- y = Graphics.getImageHeight(img.frontTch)/2}  -- 32
 -- multiplier for analogue stick size
@@ -81,24 +82,22 @@ anasizemulti = 7.5
 anaendbg = ""  -- dbg ztodo remove
 genericdebugtext = ""  -- multipurpose global debug text ztodo remove this
 -- analogsenhancer config paths
-anaencfgpaths = {"ur0:tai/AnaEnaCfg.txt","ux0:data/AnalogsEnhancer/config.txt"}
+anaencfgpaths = {
+	"ur0:tai/AnaEnaCfg.txt",
+	"ux0:data/AnalogsEnhancer/config.txt"}
 dzstatustext = {
 	"config loaded from ",
 	"cannot find file. is plugin installed?",
 	"config loaded. it is recommended to set deadzones to 0 before configuring",
-	"config successfully set. reboot to apply changes"}
+	"config successfully set. press start to reboot & apply changes"}
 
--- init vars to avoid nil
--- move to just before read
--- lx, ly, rx, ry = 0.0, 0.0, 0.0, 0.0  -- /!\ will change
--- lxmax, lymax, rxmax, rymax = 0.0, 0.0, 0.0, 0.0  -- /!\ will change
 -- probably doesn't need to be a global to be persistent,
 -- but i couldn't make it work
 local stkMax = {lx = 0.0, ly = 0.0, rx = 0.0, ry = 0.0}  -- /!\ will change
 -- for converting keyread to keydown - updates at end of frame
 -- padprevframe = 0  -- /!\ will change
 -- current page (0=home, 1=deadzone config, etc.)
-currPage = 0  -- /!\ will change
+local currPage = 0  -- /!\ will change
 
 ---------------------------- function declarations ----------------------------
 
@@ -496,7 +495,7 @@ function main(padPrevFrame)
 	batt.pct = System.getBatteryPercentage()
 	if System.isBatteryCharging() then
 		batt.clr = clr.green
-	elseif batt.pct < 15 then
+	elseif batt.pct <= 18 then
 		batt.clr = clr.red
 	else
 		batt.clr = clr.grey
