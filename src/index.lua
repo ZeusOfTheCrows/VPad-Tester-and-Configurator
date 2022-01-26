@@ -3,8 +3,8 @@
 --         built upon on work by Keinta15 | Original work by Smoke5          --
 -------------------------------------------------------------------------------
 
----------------------------------- ~globals~ -----------------------------------
--- locals marked /!\ are manipulated in code. i know it's bad practice, but i
+---------------------------------- ~globals~ ----------------------------------
+-- locals marked /~\ are manipulated in code. i know it's bad practice, but i
 -- find it makes more sense. also they're all marked as local - i found lots of
 -- info on why locals are better and much faster, and none on why they're worse
 
@@ -59,16 +59,16 @@ local img = {
 	rearTch  = Graphics.loadImage("app0:resources/img/blu.png")}
 
 -- load fonts
-local varwFont = Font.load("app0:/resources/fnt/fir-san-reg.ttf")  -- variable width
-local monoFont = Font.load("app0:/resources/fnt/fir-cod-reg.ttf")  -- monospace
+local varwFont = Font.load("app0:/resources/fnt/fir-san-reg.ttf")
+local monoFont = Font.load("app0:/resources/fnt/fir-cod-reg.ttf")
 Font.setPixelSizes(varwFont, 24)
 Font.setPixelSizes(monoFont, 24)
 
 -- audio related vars
 Sound.init()  -- this is never terminated, but doing so crashes to livearea
 local audiopath = "app0:resources/snd/stereo-audio-test.ogg"
-local audiofile = 0  -- /!\ -- ztodo: i don't think i need this here
-local audioplaying = false  -- /!\
+local audiofile = 0  --/~\ -- ztodo: i don't think i need this here
+local audioplaying = false  --/~\
 
 -- offsets touch image to account for image size. should be half of resolution
 local touchoffset = {x = 30, y = 32}
@@ -78,9 +78,9 @@ local touchoffset = {x = 30, y = 32}
 -- multiplier for analogue stick size
 local anasizemulti = 7.5
 -- global file handle for analogsenhancer config file
--- anaencfgprops = {}  -- /!\ will change
+-- anaencfgprops = {}  --/~\
 local anaendbg = ""  -- dbg ztodo remove
-local genericdebugtext = ""  -- multipurpose global debug text ztodo remove this
+local genericdebugtext = ""  -- multipurpose global debug text ztodo remove
 -- analogsenhancer config paths
 local anaencfgpaths = {
 	"ur0:tai/AnaEnaCfg.txt",
@@ -93,15 +93,15 @@ local dzstatustexts = {
 
 -- probably doesn't need to be a global to be persistent,
 -- but i couldn't make it work
-local stkMax = {lx = 0.0, ly = 0.0, rx = 0.0, ry = 0.0}  -- /!\ will change
+local stkMax = {lx = 0.0, ly = 0.0, rx = 0.0, ry = 0.0}  --/~\
 -- for converting keyread to keydown - updates at end of frame
--- padprevframe = 0  -- /!\ will change
+-- padprevframe = 0  --/~\
 -- current page (0=home, 1=deadzone config, etc.)
-local currPage = 0  -- /!\ will change
+local currPage = 0  --/~\
 
 ---------------------------- function declarations ----------------------------
 
-local function lPad(str, len, char)  -- for padding numbers, to avoid jumping text
+local function lPad(str, len, char)  -- pad numbers, to avoid jumping text
 	-- default arguments
 	local len = len or 3
 	local char = char or "0"
@@ -156,7 +156,7 @@ local function touchValsToTable(...)  -- readTouch values to table
 	return rtn
 end
 
-local function calcMax(currNum, currMax)  -- calculating "max" of stick range from 0
+local function calcMax(currNum, currMax)  -- calculate "max" stick range 0-128
 	local num = math.abs(currNum - 127)
 	local max = currMax and math.abs(currMax) or 0.0  -- catch if nil
 	if num > max then
@@ -166,7 +166,7 @@ local function calcMax(currNum, currMax)  -- calculating "max" of stick range fr
 	end
 end
 
-local function openFile(filepaths)  -- find existing file and return, or return false
+local function openFile(filepaths)  -- find existing file or return false
 	for i, p in ipairs(filepaths) do
 		if System.doesFileExist(p) then
 			--                         first 3 letters of path (for id'ing)
@@ -176,7 +176,7 @@ local function openFile(filepaths)  -- find existing file and return, or return 
 	return false, ""
 end
 
-local function parseCfgFile(filepaths)  -- read config file and return info (check)
+local function parseCfgFile(filepaths)  -- read config file and return info
 	local anaenraw = {}  -- unparsed ana en properties
 	local anaenprops = {}  -- analogs enhancer properties
 	local file, partt = openFile(filepaths)  -- file handle, partition
@@ -199,7 +199,7 @@ local function parseCfgFile(filepaths)  -- read config file and return info (che
 	end
 end
 
-local function toggleAudio()  -- no arguments because it has to be a global, i think
+local function toggleAudio()  -- no arguments because it has to be persistent?
 	-- /!\ Sound.isPlaying does not work. whether 'tis my bug or native, i do
 	-- /!\ not know; but once toggled twice it always returns false
 	audioplaying = not audioplaying  -- toggle bool ztodo local
@@ -221,7 +221,7 @@ end
 
 ------------------------------ drawing functions ------------------------------
 
-local function drawDecs(batt)  -- draw decorations (title, frame, battery, etc.)
+local function drawDecs(batt)  -- draw decorations (title, frame, battery, etc)
 	-- colour background & draw bg image
 	-- Graphics.fillRect(0, 960, 0, 544, clr.black)
 	Graphics.drawImage(0, 40, img.bgd)
@@ -242,7 +242,7 @@ local function drawHomePage()
 	Font.print(varwFont, 205, 178, genericdebugtext, clr.grey)
 end
 
-local function drawDzcfPage(statustext, statuscolour)  -- draw deadzone config page
+local function drawDzcfPage(statustext, statuscolour)  -- deadzone config page
 	local statuscolour = clr.grey or statuscolour
 	-- Display info
 	Font.print(varwFont, 205, 078, customToStr(statustext, "; "), statuscolour)
@@ -354,7 +354,7 @@ local function drawStickText(stkVals)  -- bottom two lines of info numbers
 	       "\nMax:   " .. lPad(stkMax.rx) .. ", " .. lPad(stkMax.ry), clr.white)
 end
 
-local function drawMiniSticks(stkVals)  -- smaller stick circle for deadzone config
+local function drawMiniSticks(stkVals)  -- smaller stick circle for dz cfg
 	-- draw recommended deadzones 137, 300
 	Graphics.fillCircle(124, 304,
 	                   ((math.max(stkMax.lx, stkMax.ly)*0.3) + 4), clr.dRed)
@@ -369,7 +369,7 @@ local function drawMiniSticks(stkVals)  -- smaller stick circle for deadzone con
 	        (806 + stkVals.rx / 3.33), (266 + stkVals.ry / 3.33), 4, clr.bright)
 end
 
-local function drawTouch(fronttouch, reartouch)  -- print denoting front/rear touch
+local function drawTouch(fronttouch, reartouch)  -- front/rear touch thumbprint
 	for x, y in pairs(fronttouch) do
 		if x ~= nil then  -- /!\ N.B. x/y are not equivalent to table.x/y
 			Graphics.drawImage(x - touchoffset.x, y - touchoffset.y, img.frontTch)
@@ -392,7 +392,8 @@ end
 ------------------------------- main functions --------------------------------
 ---------------- (functions that call other smaller functions) ----------------
 
-local function drawInfo(pad, page, stkVals, fronttouch, reartouch, batt, dzstatus)
+local function drawInfo(pad, page, stkVals,  -- ugly, but trims line length
+	                     fronttouch, reartouch, batt, dzstatus)
 	-- main draw function that calls others
 	local page = page or 0  -- default value for current page
 
@@ -419,7 +420,7 @@ local function drawInfo(pad, page, stkVals, fronttouch, reartouch, batt, dzstatu
 	Screen.flip()  -- flip framebuffer, i guess?
 end
 
-local function homePageLogic(pad, ppf) -- ppf = pad prev frame
+local function homePageLogic(pad, ppf)
 	-- reset stick max
 	if Controls.check(pad, btn.lTrigger) and
 	   Controls.check(pad, btn.rTrigger) then
