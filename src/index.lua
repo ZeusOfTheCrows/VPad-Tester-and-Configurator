@@ -110,7 +110,7 @@ local function lPad(str, len, char)  -- pad numbers, to avoid jumping text
 	return string.rep(char, len - #str) .. str
 end
 
-local function customToStr(arrayval, sepchars)  -- i hate this language.
+local function customToStr(arrayval, sepchars)  -- only used for debug for now
 	-- i know table.concat exists, but this doesn't have a tizz when told to
 	-- concatenate a string (advanced programming i know)
 	local sepchars = sepchars or "; "
@@ -120,7 +120,7 @@ local function customToStr(arrayval, sepchars)  -- i hate this language.
 	elseif type(arrayval) == "string" then
 		return arrayval
 	elseif type(arrayval) == "boolean" then
-		return arrayval and "false" or "true"
+		return arrayval and "true" or "false"
 	else
 		local r = ""
 		local first = true  -- first iteration of loop
@@ -246,9 +246,9 @@ local function drawDzcfPage(statustext, statuscolour)  -- deadzone config page
 	local statuscolour = clr.grey or statuscolour
 	-- Display info
 	Font.print(varwFont, 205, 078, customToStr(statustext, "; "), statuscolour)
-	Font.print(varwFont, 205, 103, "press Δ to reset max stick range", clr.grey)
-	-- Font.print(varwFont, 205, 128, "Press X + O for Sound Test", clr.grey)
-	-- Font.print(varwFont, 205, 153, "placeholder", clr.grey)
+	Font.print(varwFont, 205, 103, "press L to reset max stick range", clr.grey)
+	Font.print(varwFont, 205, 128, "press Δ to toggle software rescaling [NYI]", clr.grey)
+	Font.print(varwFont, 205, 153, "press Π to toggle analog_wide [NYI]", clr.grey)
 	-- debug print
 	-- Font.print(varwFont, 205, 178, "placeholder", clr.grey)
 end
@@ -469,8 +469,8 @@ end
 
 local function dzcfPageLogic(pad, ppf)  -- deadzone config page
 	-- reset stick max
-	if Controls.check(pad, btn.triangle) and not
-	   Controls.check(ppf, btn.triangle) then
+	if Controls.check(pad, btn.lTrigger) and not
+	   Controls.check(ppf, btn.lTrigger) then
 		for k, v in pairs(stkMax) do
 			stkMax[k] = 0.0
 		end
