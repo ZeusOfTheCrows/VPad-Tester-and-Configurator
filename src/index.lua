@@ -3,13 +3,13 @@
 --         built upon on work by Keinta15 | Original work by Smoke5          --
 -------------------------------------------------------------------------------
 
------------------------------------ globals -----------------------------------
+---------------------------------- ~globals~ -----------------------------------
 -- locals marked /!\ are manipulated in code. i know it's bad practice, but i
 -- find it makes more sense. also they're all marked as local - i found lots of
 -- info on why locals are better and much faster, and none on why they're worse
 
 -- global colours
-clr = {
+local clr = {
 	white  = Color.new(235, 219, 178),
 	bright = Color.new(251, 241, 199),
 	orange = Color.new(254, 128, 025),
@@ -20,7 +20,7 @@ clr = {
 	black  = Color.new(040, 040, 040)}--ztodo check this works
 
 -- short button names
-btn = {
+local btn = {
 	cross    = SCE_CTRL_CROSS,
 	square   = SCE_CTRL_SQUARE,
 	circle   = SCE_CTRL_CIRCLE,
@@ -40,7 +40,7 @@ btn = {
 	btn.cancel = (btn.accept == btn.circle) and btn.cross or btn.circle
 
 -- load images from files
-img = {
+local img = {
 	bgd      = Graphics.loadImage("app0:resources/img/bgd.png"),
 	cross    = Graphics.loadImage("app0:resources/img/crs.png"),
 	square   = Graphics.loadImage("app0:resources/img/sqr.png"),
@@ -59,33 +59,33 @@ img = {
 	rearTch  = Graphics.loadImage("app0:resources/img/blu.png")}
 
 -- load fonts
-varwFont = Font.load("app0:/resources/fnt/fir-san-reg.ttf")  -- variable width
-monoFont = Font.load("app0:/resources/fnt/fir-cod-reg.ttf")  -- monospace
+local varwFont = Font.load("app0:/resources/fnt/fir-san-reg.ttf")  -- variable width
+local monoFont = Font.load("app0:/resources/fnt/fir-cod-reg.ttf")  -- monospace
 Font.setPixelSizes(varwFont, 24)
 Font.setPixelSizes(monoFont, 24)
 
 -- audio related vars
 Sound.init()  -- this is never terminated, but doing so crashes to livearea
-audiopath = "app0:resources/snd/stereo-audio-test.ogg"
-audiofile = 0  -- /!\ -- ztodo: i don't think i need this here
+local audiopath = "app0:resources/snd/stereo-audio-test.ogg"
+local audiofile = 0  -- /!\ -- ztodo: i don't think i need this here
 local audioplaying = false  -- /!\
 
 -- offsets touch image to account for image size. should be half of resolution
-touchoffset = {x = 30, y = 32}
+local touchoffset = {x = 30, y = 32}
 -- could be automatic, but isn't due to a bug (see lines ~380 & ~315):
 -- touchoffset  = {x = Graphics.getImageWidth (img.frontTch)/2,  -- 30
                 -- y = Graphics.getImageHeight(img.frontTch)/2}  -- 32
 -- multiplier for analogue stick size
-anasizemulti = 7.5
+local anasizemulti = 7.5
 -- global file handle for analogsenhancer config file
 -- anaencfgprops = {}  -- /!\ will change
-anaendbg = ""  -- dbg ztodo remove
-genericdebugtext = ""  -- multipurpose global debug text ztodo remove this
+local anaendbg = ""  -- dbg ztodo remove
+local genericdebugtext = ""  -- multipurpose global debug text ztodo remove this
 -- analogsenhancer config paths
-anaencfgpaths = {
+local anaencfgpaths = {
 	"ur0:tai/AnaEnaCfg.txt",
 	"ux0:data/AnalogsEnhancer/config.txt"}
-dzstatustext = {
+local dzstatustexts = {
 	"config loaded from ",
 	"cannot find file. is plugin installed?",
 	"config loaded. it is recommended to set deadzones to 0 before configuring",
@@ -101,7 +101,7 @@ local currPage = 0  -- /!\ will change
 
 ---------------------------- function declarations ----------------------------
 
-function lPad(str, len, char)  -- for padding numbers, to avoid jumping text
+local function lPad(str, len, char)  -- for padding numbers, to avoid jumping text
 	-- default arguments
 	local len = len or 3
 	local char = char or "0"
@@ -110,7 +110,7 @@ function lPad(str, len, char)  -- for padding numbers, to avoid jumping text
 	return string.rep(char, len - #str) .. str
 end
 
-function customToStr(arrayval, sepchars)  -- i hate this language.
+local function customToStr(arrayval, sepchars)  -- i hate this language.
 	-- i know table.concat exists, but this doesn't have a tizz when told to
 	-- concatenate a string (advanced programming i know)
 	local sepchars = sepchars or "; "
@@ -137,7 +137,7 @@ function customToStr(arrayval, sepchars)  -- i hate this language.
 	end
 end
 
-function touchValsToTable(...)  -- readTouch values to table
+local function touchValsToTable(...)  -- readTouch values to table
 	-- convert values returned from Controls.read[Retro]Touch() into
 	-- coherent x = y dictionary
 	local exes, wyes, rtn = {}, {}, {}
@@ -156,7 +156,7 @@ function touchValsToTable(...)  -- readTouch values to table
 	return rtn
 end
 
-function calcMax(currNum, currMax)  -- calculating "max" of stick range from 0
+local function calcMax(currNum, currMax)  -- calculating "max" of stick range from 0
 	local num = math.abs(currNum - 127)
 	local max = currMax and math.abs(currMax) or 0.0  -- catch if nil
 	if num > max then
@@ -166,7 +166,7 @@ function calcMax(currNum, currMax)  -- calculating "max" of stick range from 0
 	end
 end
 
-function openFile(filepaths)  -- find existing file and return, or return false
+local function openFile(filepaths)  -- find existing file and return, or return false
 	for i, p in ipairs(filepaths) do
 		if System.doesFileExist(p) then
 			--                         first 3 letters of path (for id'ing)
@@ -176,7 +176,7 @@ function openFile(filepaths)  -- find existing file and return, or return false
 	return false, ""
 end
 
-function parseCfgFile(filepaths)  -- read config file and return info (check)
+local function parseCfgFile(filepaths)  -- read config file and return info (check)
 	local anaenraw = {}  -- unparsed ana en properties
 	local anaenprops = {}  -- analogs enhancer properties
 	local file, partt = openFile(filepaths)  -- file handle, partition
@@ -199,7 +199,7 @@ function parseCfgFile(filepaths)  -- read config file and return info (check)
 	end
 end
 
-function toggleAudio()  -- no arguments because it has to be a global, i think
+local function toggleAudio()  -- no arguments because it has to be a global, i think
 	-- /!\ Sound.isPlaying does not work. whether 'tis my bug or native, i do
 	-- /!\ not know; but once toggled twice it always returns false
 	audioplaying = not audioplaying  -- toggle bool ztodo local
@@ -221,7 +221,7 @@ end
 
 ------------------------------ drawing functions ------------------------------
 
-function drawDecs(batt)  -- draw decorations (title, frame, battery, etc.)
+local function drawDecs(batt)  -- draw decorations (title, frame, battery, etc.)
 	-- colour background & draw bg image
 	-- Graphics.fillRect(0, 960, 0, 544, clr.black)
 	Graphics.drawImage(0, 40, img.bgd)
@@ -232,7 +232,7 @@ function drawDecs(batt)  -- draw decorations (title, frame, battery, etc.)
 	Font.print(monoFont, 904, 004,  batt.pct .. "%", batt.clr)
 end
 
-function drawHomePage()
+local function drawHomePage()
 	-- Display info
 	Font.print(varwFont, 205, 078, "press Start + Select to exit", clr.grey)
 	Font.print(varwFont, 205, 103,
@@ -242,7 +242,7 @@ function drawHomePage()
 	Font.print(varwFont, 205, 178, genericdebugtext, clr.grey)
 end
 
-function drawDzcfPage(statustext, statuscolour)  -- draw deadzone config page
+local function drawDzcfPage(statustext, statuscolour)  -- draw deadzone config page
 	local statuscolour = clr.grey or statuscolour
 	-- Display info
 	Font.print(varwFont, 205, 078, customToStr(statustext, "; "), statuscolour)
@@ -253,7 +253,7 @@ function drawDzcfPage(statustext, statuscolour)  -- draw deadzone config page
 	-- Font.print(varwFont, 205, 178, "placeholder", clr.grey)
 end
 
-function drawBtnInput(pad)  -- all digital buttons
+local function drawBtnInput(pad)  -- all digital buttons
 
 	--[[ bitmask
 		1      select
@@ -330,7 +330,7 @@ function drawBtnInput(pad)  -- all digital buttons
 	end
 end
 
-function drawSticks(stkVals)  -- fullsize analogue sticks
+local function drawSticks(stkVals)  -- fullsize analogue sticks
 	-- draw and move analogue sticks on screen
 	-- default position: 90, 270 (-(128/anasizemulti)
 	Graphics.drawImage(
@@ -345,7 +345,7 @@ function drawSticks(stkVals)  -- fullsize analogue sticks
 		img.analogue)
 end
 
-function drawStickText(stkVals)  -- bottom two lines of info numbers
+local function drawStickText(stkVals)  -- bottom two lines of info numbers
 	Font.print(monoFont, 010, 480,
 	       "Left: " .. lPad(stkVals.lx) .. ", " .. lPad(stkVals.ly) ..
 	       "\nMax:  " .. lPad(stkMax.lx) .. ", " .. lPad(stkMax.ly), clr.white)
@@ -354,7 +354,7 @@ function drawStickText(stkVals)  -- bottom two lines of info numbers
 	       "\nMax:   " .. lPad(stkMax.rx) .. ", " .. lPad(stkMax.ry), clr.white)
 end
 
-function drawMiniSticks(stkVals)  -- smaller stick circle for deadzone config
+local function drawMiniSticks(stkVals)  -- smaller stick circle for deadzone config
 	-- draw recommended deadzones 137, 300
 	Graphics.fillCircle(124, 304,
 	                   ((math.max(stkMax.lx, stkMax.ly)*0.3) + 4), clr.dRed)
@@ -369,7 +369,7 @@ function drawMiniSticks(stkVals)  -- smaller stick circle for deadzone config
 	        (806 + stkVals.rx / 3.33), (266 + stkVals.ry / 3.33), 4, clr.bright)
 end
 
-function drawTouch(fronttouch, reartouch)  -- print denoting front/rear touch
+local function drawTouch(fronttouch, reartouch)  -- print denoting front/rear touch
 	for x, y in pairs(fronttouch) do
 		if x ~= nil then  -- /!\ N.B. x/y are not equivalent to table.x/y
 			Graphics.drawImage(x - touchoffset.x, y - touchoffset.y, img.frontTch)
@@ -392,7 +392,7 @@ end
 ------------------------------- main functions --------------------------------
 ---------------- (functions that call other smaller functions) ----------------
 
-function drawInfo(pad, page, stkVals, fronttouch, reartouch, batt, dzstatus)
+local function drawInfo(pad, page, stkVals, fronttouch, reartouch, batt, dzstatus)
 	-- main draw function that calls others
 	local page = page or 0  -- default value for current page
 
@@ -419,7 +419,7 @@ function drawInfo(pad, page, stkVals, fronttouch, reartouch, batt, dzstatus)
 	Screen.flip()  -- flip framebuffer, i guess?
 end
 
-function homePageLogic(pad, ppf) -- ppf = pad prev frame
+local function homePageLogic(pad, ppf) -- ppf = pad prev frame
 	-- reset stick max
 	if Controls.check(pad, btn.lTrigger) and
 	   Controls.check(pad, btn.rTrigger) then
@@ -466,7 +466,7 @@ function homePageLogic(pad, ppf) -- ppf = pad prev frame
 	-- end
 end
 
-function dzcfPageLogic(pad, ppf)  -- deadzone config page
+local function dzcfPageLogic(pad, ppf)  -- deadzone config page
 	-- reset stick max
 	if Controls.check(pad, btn.triangle) and not
 	   Controls.check(ppf, btn.triangle) then
@@ -486,7 +486,7 @@ function dzcfPageLogic(pad, ppf)  -- deadzone config page
 	end
 end
 
-function main(padPrevFrame)
+local function main(padPrevFrame)
 	-- i don't know if the "main" function is a paradigm in lua, but
 	-- it seems neater to me
 
@@ -517,7 +517,7 @@ function main(padPrevFrame)
 	local fronttouch = touchValsToTable(Controls.readTouch())
 	local reartouch = touchValsToTable(Controls.readRetroTouch())
 
-	dzstatus = ""  -- ztodo
+	local dzstatus = ""  -- ztodo
 
 	if currPage == 0 then
 		homePageLogic(pad, padPrevFrame)

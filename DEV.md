@@ -12,6 +12,7 @@
 	* use the original if you want to change the name/id
 	* you'll have to mess with directories
 * [vpk editor](https://qberty.com/ps-vita-vpk-editor/) is quite useful for automatically reducing bit depth
+* [tabs](https://lea.verou.me/2012/01/why-tabs-are-clearly-superior/). [for accessibility](https://ww.reddit.com/r/javascript/comments/c8drjo/nobody_talks_about_the_real_reason_to_use_tabs/).
 * this is how i visualise stick range
 
 ![max range logic](./img/max-logic-pic.png)
